@@ -1,16 +1,15 @@
-package main
+package common
 
 import (
-	"fmt"
 	"github.com/garyburd/redigo/redis"
-	. "github.com/nature19862001/base/common"
+	//. "github.com/nature19862001/base/common"
 )
 
 var RedisConn redis.Conn
 
-func InitRedis() error {
+func InitRedis(net, addr string) error {
 	var err error
-	RedisConn, err = redis.Dial("tcp", "127.0.0.1:6379")
+	RedisConn, err = redis.Dial(net, addr)
 
 	if err != nil {
 		return err
