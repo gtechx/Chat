@@ -4,16 +4,21 @@ import (
 	"fmt"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
+	"sync"
+	"time"
 )
 
 type Client struct {
-	conn gtnet.IConn
+	conn       gtnet.IConn
+	lock       *sync.Mutex
+	isVerifyed bool
 }
 
 func newClient(conn gtnet.IConn) *Client {
-	c := &Client{conn}
+	c := &Client{conn: conn, lock: new(sync.Mutex), isVerifyed: false}
 	conn.SetMsgParser(c)
 	conn.SetListener(c)
+	go c.waitForLogin()
 	return c
 }
 
@@ -21,6 +26,19 @@ func (this *Client) Close() {
 	if this.conn != nil {
 		this.conn.Close()
 		this.conn = nil
+	}
+}
+
+func (this *Client) waitForLogin() {
+	t1 := time.NewTimer(time.Second * 30)
+	select {
+	case <-t1.C:
+		t1.Stop()
+		this.lock.Lock()
+		if !this.isVerifyed {
+			this.Close()
+		}
+		this.lock.Unlock()
 	}
 }
 
@@ -33,6 +51,12 @@ func (this *Client) ParseHeader(data []byte) int {
 
 func (this *Client) ParseMsg(data []byte) {
 	fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
+	msgid := int(Int16(data))
+	switch msgid {
+	case 1000:
+	default:
+		fmt.Println("unknow msgid:", msgid)
+	}
 	this.conn.Send(append(Bytes(int16(len(data))), data...))
 }
 
