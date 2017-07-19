@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	. "github.com/nature19862001/Chat/common"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
 	"sync"
@@ -9,31 +10,26 @@ import (
 )
 
 type Client struct {
-	conn       gtnet.IConn
-	lock       *sync.Mutex
-	isVerifyed bool
-}
-
-func newClient(conn gtnet.IConn) *Client {
-	c := &Client{conn: conn, lock: new(sync.Mutex), isVerifyed: false}
-	conn.SetMsgParser(c)
-	conn.SetListener(c)
-	go c.waitForLogin()
-	return c
+	conn        gtnet.IConn
+	lock        *sync.Mutex
+	isVerifyed  bool
+	timer       *time.Timer
+	verfiycount int
 }
 
 func (this *Client) Close() {
 	if this.conn != nil {
+		removeClient(this.conn.ConnAddr())
 		this.conn.Close()
 		this.conn = nil
 	}
 }
 
 func (this *Client) waitForLogin() {
-	t1 := time.NewTimer(time.Second * 30)
+	this.timer = time.NewTimer(time.Second * 30)
 	select {
-	case <-t1.C:
-		t1.Stop()
+	case <-this.timer.C:
+		this.timer.Stop()
 		this.lock.Lock()
 		if !this.isVerifyed {
 			this.Close()
@@ -51,13 +47,40 @@ func (this *Client) ParseHeader(data []byte) int {
 
 func (this *Client) ParseMsg(data []byte) {
 	fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
-	msgid := int(Int16(data))
+	msgid := Int16(data)
 	switch msgid {
-	case 1000:
+	case MsgId_ReqLogin:
+		uid := Uint64(data[2:10])
+		password := data[10:]
+		ret := new(RetLogin)
+		if checkLogin(uid, password) {
+			ret.Result = 1
+			this.lock.Lock()
+			this.isVerifyed = true
+			this.lock.Unlock()
+			n, err := RedisConn.Do("SADD", "user:online", String(uid))
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			if Int(n) <= 0 {
+				fmt.Println("sadd cmd failed!")
+			}
+		} else {
+			ret.Result = 0
+			this.verfiycount++
+
+			if this.verfiycount < 5 {
+				this.timer.Reset(time.Second * 30)
+			} else {
+				this.Close()
+			}
+		}
+		retdata := Bytes(ret)
+		this.conn.Send(append(Bytes(int16(len(retdata))), retdata...))
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}
-	this.conn.Send(append(Bytes(int16(len(data))), data...))
+	//this.conn.Send(append(Bytes(int16(len(data))), data...))
 }
 
 func (this *Client) OnError(errorcode int, msg string) {
@@ -74,14 +97,12 @@ func (this *Client) OnPostSend([]byte, int) {
 
 func (this *Client) OnClose() {
 	fmt.Println("tcpserver closed:", this.conn.ConnAddr())
-	//remove client conn
-	delete(promap, this)
 }
 
 func (this *Client) OnRecvBusy([]byte) {
-	str := "server is busy"
+	//str := "server is busy"
 	//p.conn.Send(Bytes(int16(len(str))))
-	this.conn.Send(append(Bytes(int16(len(str))), []byte(str)...))
+	//this.conn.Send(append(Bytes(int16(len(str))), []byte(str)...))
 }
 
 func (this *Client) OnSendBusy([]byte) {

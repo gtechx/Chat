@@ -8,7 +8,6 @@ import (
 )
 
 var server *gtnet.Server
-var clientmap map[string]*Client
 var quit chan int
 
 var nettype string = "tcp"
@@ -32,7 +31,7 @@ func main() {
 	redisaddr = *predisaddr
 
 	quit = make(chan int, 1)
-	clientmap = make(map[string]*Client, 0)
+
 	server = gtnet.NewServer(nettype, addr, onNewConn)
 
 	//init redis
@@ -58,6 +57,5 @@ func main() {
 func onNewConn(conn gtnet.IConn) {
 	addr := conn.ConnAddr()
 	fmt.Println("new conn:", addr)
-	c := newClient(conn)
-	clientmap[addr] = c
+	newClient(conn)
 }
