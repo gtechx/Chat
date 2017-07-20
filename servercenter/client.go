@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	. "github.com/nature19862001/Chat/common"
+	. "github.com/nature19862001/Chat/protocol"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
 	"sync"
@@ -97,7 +98,7 @@ func (this *Client) ParseHeader(data []byte) int {
 }
 
 func (this *Client) ParseMsg(data []byte) {
-	fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
+	//fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
 	msgid := Uint16(data)
 	if this.isVerifyed {
 		this.tickChan <- 1
@@ -112,6 +113,8 @@ func (this *Client) ParseMsg(data []byte) {
 			this.uid = uid
 			this.password = string(password)
 			ret.Result = 1
+			copy(ret.IP[0:], []byte("127.0.0.1"))
+			ret.Port = 9090
 			this.lock.Lock()
 			this.isVerifyed = true
 			this.lock.Unlock()

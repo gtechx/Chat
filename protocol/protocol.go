@@ -1,4 +1,4 @@
-package main
+package protocol
 
 // import (
 // 	"fmt"
@@ -23,6 +23,8 @@ const MsgId_ReqRetLogin uint16 = 1001
 type RetLogin struct {
 	NullCmd
 	Result byte
+	IP     [16]byte
+	Port   uint16
 }
 
 const MsgId_Tick uint16 = 1002
