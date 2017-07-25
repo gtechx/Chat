@@ -25,7 +25,9 @@ b.房间聊天
 
 **********************
 取消servercenter,所有功能集中到chatserver。所有chatserver注册自己到redis,并将自身负载信息更新到redis。
-每个chatserver在redis上面维护一个10秒的key
+每个chatserver在redis上面维护一个30秒的key，如果某个chatserver挂掉，key会消失，其他服务器会定时检查该key，发现消失以后，开启投票，确认挂掉的服务器失效。
+投票规则：
+a.发现某服务器Key消失，对服务器死亡的key进行incr操作，第一个（incr返回1的为第一个开启投票的服务器）进行incr操作的服务器负责删除该服务器的一些信息。
 chatserver之间的消息传递，通过redis上的list实现。每个chatserver都有一个list，并且定时去list中检查并pop自己的消息发送给相应的client。list中存储的是消息包的二进制。
 1.开启一个端口，负责返回客户端服务器列表，并根据所有chatserver负载，给出客户端应该登录到的服务器地址。客户端用该端口获取服务器列表。
 2.
