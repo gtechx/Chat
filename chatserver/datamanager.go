@@ -56,11 +56,45 @@ func checkLogin(uid uint64, password []byte) bool {
 	return false
 }
 
+//server op
+func getServerList() {
+
+}
+
+func getServerCount() {
+
+}
+
+func setServerTTL() {
+
+}
+
+func checkServerTTL() {
+
+}
+
+func voteServerDie() {
+
+}
+
+//user op
 func setUserOnline() {
 
 }
 
 func setUserOffline() {
+
+}
+
+func isUserOnline() {
+
+}
+
+func isUserExist() {
+
+}
+
+func isFriend() {
 
 }
 
@@ -71,6 +105,36 @@ func setUserState() {
 func sendMsgToUser() {
 
 }
+
+func addFriend() {
+
+}
+
+func deleteFriend() {
+
+}
+
+func addFriendGroup() {
+
+}
+
+func deleteFriendGroup() {
+
+}
+
+func moveFriendToGroup() {
+
+}
+
+func banFriend() {
+
+}
+
+func unBanFriend() {
+
+}
+
+//room op
 
 func sendMsgToRoom() {
 
@@ -84,10 +148,26 @@ func deleteRoom() {
 
 }
 
-func addFriend() {
+func isRoomExist() {
 
 }
 
-func deleteFriend() {
+func isUserInRoom() {
+
+}
+
+func addUserToRoom() {
+
+}
+
+func removeUserToRoom() {
+
+}
+
+func banUserInRoom() {
+
+}
+
+func unBanUserInRoom() {
 
 }
