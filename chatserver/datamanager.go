@@ -5,6 +5,50 @@ import (
 	. "github.com/nature19862001/base/common"
 )
 
+type dataManager interface {
+	//server op
+	registerServer()
+	getServerList()
+	getServerCount()
+	setServerTTL()
+	checkServerTTL()
+	voteServerDie()
+
+	//user op
+	setUserOnline()
+	setUserOffline()
+	isUserOnline()
+	isUserExist()
+	setUserState()
+
+	//friend op
+	addFriend()
+	deleteFriend()
+	addFriendGroup()
+	deleteFriendGroup()
+	moveFriendToGroup()
+	banFriend()
+	unBanFriend()
+	isFriend()
+
+	//message op
+	sendMsgToUser()
+	sendMsgToRoom()
+
+	//room op
+	createRoom()
+	deleteRoom()
+	getRoomType()
+	getRoomPassword()
+	setRoomPassword()
+	isRoomExist()
+	isUserInRoom()
+	addUserToRoom()
+	removeUserToRoom()
+	banUserInRoom()
+	unBanUserInRoom()
+}
+
 var account map[uint64]string
 var redisPool *redis.Pool
 
