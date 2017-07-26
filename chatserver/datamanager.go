@@ -7,7 +7,8 @@ import (
 
 type dataManager interface {
 	//server op
-	registerServer()
+	registerServer(addr string) bool
+	updateServerInfo()
 	getServerList()
 	getServerCount()
 	setServerTTL()

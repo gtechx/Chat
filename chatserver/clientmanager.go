@@ -7,10 +7,14 @@ import (
 
 var clientmap map[string]*Client
 var clientdelchan chan string
+var clientaddchan chan *Client
+var lastupdatecount int
 
 func init() {
 	clientmap = make(map[string]*Client, 0)
 	clientdelchan = make(chan string, 1024)
+	clientaddchan = make(chan *Client, 1024)
+	startClientOp()
 }
 
 func newClient(conn gtnet.IConn) *Client {
@@ -18,21 +22,22 @@ func newClient(conn gtnet.IConn) *Client {
 	conn.SetMsgParser(c)
 	conn.SetListener(c)
 	go c.waitForLogin()
-	addNewClient(c)
+	clientaddchan <- c
 	return c
-}
-
-func addNewClient(client *Client) {
-	addr := client.conn.ConnAddr()
-	clientmap[addr] = client
 }
 
 func removeClient(addr string) {
 	clientdelchan <- addr
 }
 
-func startClientDel() {
-	for addr := range clientdelchan {
-		delete(clientmap, addr)
+func startClientOp() {
+	for {
+		select {
+		case newclient := clientaddchan:
+			addr := newclient.conn.ConnAddr()
+			clientmap[addr] = newclient
+		case deladdr := clientdelchan:
+			delete(clientmap, deladdr)
+		}
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/nature19862001/base/gtnet"
 )
 
-var server *gtnet.Server
+var gDataManager dataManager
 var quit chan int
 
 var nettype string = "tcp"
@@ -32,24 +32,12 @@ func main() {
 
 	quit = make(chan int, 1)
 
-	server = gtnet.NewServer(nettype, addr, onNewConn)
+	ok := gDataManager.registerServer(addr)
 
-	//init redis
-	err = InitRedis(redisnet, redisaddr)
-	if err != nil {
-		fmt.Println(err.Error())
+	if !ok {
+		fmt.Println("can't register server to datamanager")
 		return
 	}
-	defer CloseRedis()
-
-	//start server
-	err = server.Start()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	defer server.Stop()
-	fmt.Println("server start ok...")
 
 	<-quit
 }
