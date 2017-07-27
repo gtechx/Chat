@@ -11,7 +11,7 @@ var gDataManager dataManager
 var quit chan int
 
 var nettype string = "tcp"
-var addr string = "127.0.0.1:9090"
+var serverAddr string = "127.0.0.1:9090"
 var redisnet string = "tcp"
 var redisaddr string = "127.0.0.1:6379"
 
@@ -26,24 +26,41 @@ func main() {
 	flag.Parse()
 
 	nettype = *pnet
-	addr = *paddr
+	serverAddr = *paddr
 	redisnet = *predisnet
 	redisaddr = *predisaddr
 
 	quit = make(chan int, 1)
+	gDataManager = new(redisDataManager)
+	gDataManager.initialize()
 
-	ok := gDataManager.registerServer(addr)
+	//register server
+	ok := gDataManager.registerServer(serverAddr)
 
 	if !ok {
 		fmt.Println("can't register server to datamanager")
 		return
 	}
 
-	<-quit
-}
+	//init loadbalance
+	loadBanlanceInit()
 
-func onNewConn(conn gtnet.IConn) {
-	addr := conn.ConnAddr()
-	fmt.Println("new conn:", addr)
-	newClient(conn)
+	//init chat server
+	ok = chatServerInit()
+
+	if !ok {
+		fmt.Println("chat server init failed!!!")
+		return
+	}
+
+	//keep live init
+	keepLiveInit()
+
+	//other server live monitor init
+	serverMonitorInit()
+
+	//msg from other server monitor
+	messagePullInit()
+
+	<-quit
 }

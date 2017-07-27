@@ -39,5 +39,12 @@ func startClientOp() {
 		case deladdr := clientdelchan:
 			delete(clientmap, deladdr)
 		}
+
+		clientcount := len(clientmap)
+		deltacount := clientcount - lastupdatecount
+		if deltacount >= 100 || deltacount <= -100 {
+			gDataManager.incrServerClientCountBy(serverAddr, deltacount)
+			lastupdatecount = clientcount
+		}
 	}
 }

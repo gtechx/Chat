@@ -7,10 +7,6 @@ import (
 )
 
 var server *gtnet.Server
-var quit chan int
-
-var nettype string = "tcp"
-var addr string = "127.0.0.1:9090"
 
 func chatServerInit(nettype, addr string) bool {
 	var err error
@@ -22,7 +18,6 @@ func chatServerInit(nettype, addr string) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	defer server.Stop()
 	fmt.Println("server start ok...")
 
 	return true

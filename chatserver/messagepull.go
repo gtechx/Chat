@@ -8,5 +8,15 @@ import (
 )
 
 func messagePullInit() {
+	go startMessagePull()
+}
 
+func startMessagePull() {
+	for {
+		data := gDataManager.pullMsg(serverAddr, 15)
+
+		if data != nil {
+			//
+		}
+	}
 }
