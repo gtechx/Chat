@@ -13,7 +13,7 @@ func loadBanlanceInit() {
 }
 
 func startHTTPServer() {
-	http.HandleFunc("/serverlist", listCmd)
+	http.HandleFunc("/serverlist", getServerList)
 	http.ListenAndServe(":9001", nil)
 }
 

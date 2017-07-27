@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	. "github.com/nature19862001/Chat/common"
-	"github.com/nature19862001/base/gtnet"
+	//. "github.com/nature19862001/Chat/common"
+	//"github.com/nature19862001/base/gtnet"
 )
 
 var gDataManager dataManager
@@ -12,11 +12,11 @@ var quit chan int
 
 var nettype string = "tcp"
 var serverAddr string = "127.0.0.1:9090"
-var redisnet string = "tcp"
-var redisaddr string = "127.0.0.1:6379"
+var redisNet string = "tcp"
+var redisAddr string = "127.0.0.1:6379"
 
 func main() {
-	var err error
+	//var err error
 
 	pnet := flag.String("net", "tcp", "-net=")
 	paddr := flag.String("addr", "127.0.0.1:9090", "-addr=")
@@ -27,8 +27,8 @@ func main() {
 
 	nettype = *pnet
 	serverAddr = *paddr
-	redisnet = *predisnet
-	redisaddr = *predisaddr
+	redisNet = *predisnet
+	redisAddr = *predisaddr
 
 	quit = make(chan int, 1)
 	gDataManager = new(redisDataManager)
@@ -46,7 +46,7 @@ func main() {
 	loadBanlanceInit()
 
 	//init chat server
-	ok = chatServerInit()
+	ok = chatServerInit(nettype, serverAddr)
 
 	if !ok {
 		fmt.Println("chat server init failed!!!")

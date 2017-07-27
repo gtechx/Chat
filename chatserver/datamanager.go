@@ -15,6 +15,7 @@ func init() {
 
 type dataManager interface {
 	initialize()
+	checkLogin(uid uint64, password string) bool
 	//server op
 	registerServer(addr string) bool
 	incrServerClientCountBy(addr string, count int)
@@ -34,6 +35,8 @@ type dataManager interface {
 	setUserState()
 
 	//friend op
+	reqAddFriend()
+	agreeFriendReq()
 	addFriend()
 	deleteFriend()
 	addFriendGroup()
@@ -42,6 +45,8 @@ type dataManager interface {
 	banFriend()
 	unBanFriend()
 	isFriend()
+	setFriendVerify()
+	getFriendVerify()
 
 	//message op
 	sendMsgToUser()
@@ -59,4 +64,8 @@ type dataManager interface {
 	removeUserToRoom()
 	banUserInRoom()
 	unBanUserInRoom()
+	setRoomDescription()
+	getRoomDescription()
+	setRoomVerify()
+	getRoomVerify()
 }

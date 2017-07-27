@@ -108,7 +108,7 @@ func (this *Client) ParseMsg(data []byte) {
 		uid := Uint64(data[2:10])
 		password := data[10:]
 		ret := new(RetLogin)
-		if checkLogin(uid, password) {
+		if gDataManager.checkLogin(uid, string(password)) {
 			this.state = state_logined
 			this.uid = uid
 			this.password = string(password)

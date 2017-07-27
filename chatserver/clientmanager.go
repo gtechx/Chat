@@ -33,10 +33,10 @@ func removeClient(addr string) {
 func startClientOp() {
 	for {
 		select {
-		case newclient := clientaddchan:
+		case newclient := <-clientaddchan:
 			addr := newclient.conn.ConnAddr()
 			clientmap[addr] = newclient
-		case deladdr := clientdelchan:
+		case deladdr := <-clientdelchan:
 			delete(clientmap, deladdr)
 		}
 
