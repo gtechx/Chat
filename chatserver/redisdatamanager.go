@@ -219,6 +219,14 @@ func (this *redisDataManager) getFriendVerify() {
 
 }
 
+func (this *redisDataManager) setFriendAddSetting() {
+
+}
+
+func (this *redisDataManager) getFriendAddSetting() {
+
+}
+
 //message op
 func (this *redisDataManager) sendMsgToUser() {
 
@@ -286,5 +294,13 @@ func (this *redisDataManager) setRoomVerify() {
 }
 
 func (this *redisDataManager) getRoomVerify() {
+
+}
+
+func (this *redisDataManager) setRoomJoinSetting() {
+
+}
+
+func (this *redisDataManager) getRoomJoinSetting() {
 
 }

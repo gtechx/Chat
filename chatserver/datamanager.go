@@ -47,6 +47,8 @@ type dataManager interface {
 	isFriend()
 	setFriendVerify()
 	getFriendVerify()
+	setFriendAddSetting()
+	getFriendAddSetting()
 
 	//message op
 	sendMsgToUser()
@@ -68,4 +70,6 @@ type dataManager interface {
 	getRoomDescription()
 	setRoomVerify()
 	getRoomVerify()
+	setRoomJoinSetting()
+	getRoomJoinSetting()
 }
