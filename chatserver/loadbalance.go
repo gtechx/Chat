@@ -10,6 +10,7 @@ import (
 
 func loadBanlanceInit() {
 	go startHTTPServer()
+	go starUserRegister()
 }
 
 func startHTTPServer() {
@@ -28,4 +29,13 @@ func getServerList(rw http.ResponseWriter, req *http.Request) {
 	ret += "}\r\n"
 
 	io.WriteString(rw, ret)
+}
+
+func starUserRegister() {
+	http.HandleFunc("/register", register)
+	http.ListenAndServe(":8080", nil)
+}
+
+func register(rw http.ResponseWriter, req *http.Request) {
+
 }

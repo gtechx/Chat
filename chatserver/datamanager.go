@@ -14,7 +14,7 @@ func init() {
 }
 
 type dataManager interface {
-	initialize()
+	initialize() (bool, uint64)
 	checkLogin(uid uint64, password string) bool
 	//server op
 	registerServer(addr string) bool
@@ -28,17 +28,19 @@ type dataManager interface {
 	pullMsg(addr string, timeout int) []byte
 
 	//user op
-	setUserOnline()
-	setUserOffline()
-	isUserOnline()
+	createUser(nickname, password, regip string) bool
+	setUserOnline(uid uint64) bool
+	setUserOffline(uid uint64)
+	isUserOnline(uid uint64) bool
 	isUserExist()
 	setUserState()
 
 	//friend op
-	reqAddFriend()
-	agreeFriendReq()
+	//reqAddFriend()
+	//agreeFriendReq()
 	addFriend()
 	deleteFriend()
+	getFriendList()
 	addFriendGroup()
 	deleteFriendGroup()
 	moveFriendToGroup()
@@ -47,8 +49,8 @@ type dataManager interface {
 	isFriend()
 	setFriendVerify()
 	getFriendVerify()
-	setFriendAddSetting()
-	getFriendAddSetting()
+	setFriendVerifyType()
+	getFriendVerifyType()
 
 	//message op
 	sendMsgToUser()
@@ -57,6 +59,7 @@ type dataManager interface {
 	//room op
 	createRoom()
 	deleteRoom()
+	getRoomList()
 	getRoomType()
 	getRoomPassword()
 	setRoomPassword()
@@ -70,6 +73,6 @@ type dataManager interface {
 	getRoomDescription()
 	setRoomVerify()
 	getRoomVerify()
-	setRoomJoinSetting()
-	getRoomJoinSetting()
+	setRoomVerifyType()
+	getRoomVerifyType()
 }

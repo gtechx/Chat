@@ -33,20 +33,21 @@ type Client struct {
 func (this *Client) Close() {
 	if this.conn != nil {
 		if this.isVerifyed {
-			n, err := RedisConn.Do("SREM", "user:online", String(this.uid))
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			if n == nil {
-				fmt.Println("sadd cmd failed!")
-			}
-			n, err = RedisConn.Do("SREM", "user:online:password", this.password)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			if n == nil {
-				fmt.Println("sadd cmd failed!")
-			}
+			gDataManager.setUserOffline(uid)
+			// n, err := RedisConn.Do("SREM", "user:online", String(this.uid))
+			// if err != nil {
+			// 	fmt.Println(err.Error())
+			// }
+			// if n == nil {
+			// 	fmt.Println("sadd cmd failed!")
+			// }
+			// n, err = RedisConn.Do("SREM", "user:online:password", this.password)
+			// if err != nil {
+			// 	fmt.Println(err.Error())
+			// }
+			// if n == nil {
+			// 	fmt.Println("sadd cmd failed!")
+			// }
 		}
 		removeClient(this.conn.ConnAddr())
 		this.conn.Close()
@@ -115,23 +116,29 @@ func (this *Client) ParseMsg(data []byte) {
 			ret.Result = 1
 			copy(ret.IP[0:], []byte("127.0.0.1"))
 			ret.Port = 9090
-			this.lock.Lock()
-			this.isVerifyed = true
-			this.lock.Unlock()
-			n, err := RedisConn.Do("SADD", "user:online", String(uid))
-			if err != nil {
-				fmt.Println(err.Error())
+			ok := gDataManager.setUserOnline(uid)
+			if !ok {
+				ret.Result = -1
+			} else {
+				this.lock.Lock()
+				this.isVerifyed = true
+				this.lock.Unlock()
 			}
-			if n == nil {
-				fmt.Println("sadd cmd failed!")
-			}
-			n, err = RedisConn.Do("SADD", "user:online:password", string(password))
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			if n == nil {
-				fmt.Println("sadd cmd failed!")
-			}
+
+			// n, err := RedisConn.Do("SADD", "user:online", String(uid))
+			// if err != nil {
+			// 	fmt.Println(err.Error())
+			// }
+			// if n == nil {
+			// 	fmt.Println("sadd cmd failed!")
+			// }
+			// n, err = RedisConn.Do("SADD", "user:online:password", string(password))
+			// if err != nil {
+			// 	fmt.Println(err.Error())
+			// }
+			// if n == nil {
+			// 	fmt.Println("sadd cmd failed!")
+			// }
 		} else {
 			ret.Result = 0
 			this.verfiycount++

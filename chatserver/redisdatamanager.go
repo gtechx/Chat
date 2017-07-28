@@ -13,13 +13,33 @@ type redisDataManager struct {
 	redisPool *redis.Pool
 }
 
-func (this *redisDataManager) initialize() {
+func (this *redisDataManager) initialize() bool {
 	this.redisPool = &redis.Pool{
 		MaxIdle:      3,
 		IdleTimeout:  240 * time.Second,
 		Dial:         redisDial,
 		TestOnBorrow: redisOnBorrow,
 	}
+
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	n, err := conn.Do("EXISTS", "UID")
+
+	if err != nil {
+		fmt.Println("redis server error:", err.Error())
+		return false
+	}
+
+	if !redis.Bool(n) {
+		_, err = conn.Do("SET", "UID", 10000)
+
+		if err != nil {
+			fmt.Println("redis server error:", err.Error())
+			return false
+		}
+	}
+
+	return true
 }
 
 func (this *redisDataManager) checkLogin(uid uint64, password string) bool {
@@ -150,16 +170,70 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 }
 
 //user op
-func (this *redisDataManager) setUserOnline() {
+func (this *redisDataManager) createUser(nickname, password, regip string) (bool, uint64) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("INCR", "UID")
+
+	if err != nil {
+		fmt.Println("createUser error:", err.Error())
+		return false, -1
+	}
+
+	uid := Uint64(ret)
+
+	ret, err = conn.Do("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix())
+
+	if err != nil {
+		fmt.Println("createUser error:", err.Error())
+		return false, -1
+	}
+
+	return true, uid
 }
 
-func (this *redisDataManager) setUserOffline() {
+func (this *redisDataManager) setUserOnline(uid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("SADD", "user:online", user_pwd)
+
+	if err != nil {
+		fmt.Println("setUserOnline error:", err.Error())
+		return false
+	}
+
+	if ret == nil {
+		return false
+	}
+
+	return true
 }
 
-func (this *redisDataManager) isUserOnline() {
+func (this *redisDataManager) setUserOffline(uid uint64) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("SREM", "user:online", user_pwd)
+
+	if err != nil {
+		fmt.Println("setUserOffline error:", err.Error())
+	}
+}
+
+func (this *redisDataManager) isUserOnline(uid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "user:online", user_pwd)
+
+	if err != nil {
+		fmt.Println("isUserOnline error:", err.Error())
+		return false
+	}
+
+	return Int(ret) == 1
 }
 
 func (this *redisDataManager) isUserExist() {
@@ -171,19 +245,23 @@ func (this *redisDataManager) setUserState() {
 }
 
 //friend op
-func (this *redisDataManager) reqAddFriend() {
+// func (this *redisDataManager) reqAddFriend() {
 
-}
+// }
+
+// func (this *redisDataManager) agreeFriendReq() {
+
+// }
 
 func (this *redisDataManager) addFriend() {
 
 }
 
-func (this *redisDataManager) agreeFriendReq() {
+func (this *redisDataManager) deleteFriend() {
 
 }
 
-func (this *redisDataManager) deleteFriend() {
+func (this *redisDataManager) getFriendList() {
 
 }
 
@@ -219,11 +297,11 @@ func (this *redisDataManager) getFriendVerify() {
 
 }
 
-func (this *redisDataManager) setFriendAddSetting() {
+func (this *redisDataManager) setFriendVerifyType() {
 
 }
 
-func (this *redisDataManager) getFriendAddSetting() {
+func (this *redisDataManager) getFriendVerifyType() {
 
 }
 
@@ -242,6 +320,10 @@ func (this *redisDataManager) createRoom() {
 }
 
 func (this *redisDataManager) deleteRoom() {
+
+}
+
+func (this *redisDataManager) getRoomList() {
 
 }
 
@@ -297,10 +379,10 @@ func (this *redisDataManager) getRoomVerify() {
 
 }
 
-func (this *redisDataManager) setRoomJoinSetting() {
+func (this *redisDataManager) setRoomVerifyType() {
 
 }
 
-func (this *redisDataManager) getRoomJoinSetting() {
+func (this *redisDataManager) getRoomVerifyType() {
 
 }
