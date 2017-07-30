@@ -158,7 +158,7 @@ func (this *Client) ParseMsg(data []byte) {
 		ret.MsgId = MsgId_ReqRetLogin
 		this.send(Bytes(ret))
 	case MsgId_Tick:
-		ret := new(RetTick)
+		ret := new(Tick)
 		ret.MsgId = MsgId_Tick
 		this.send(Bytes(ret))
 	case MsgId_ReqLoginOut:

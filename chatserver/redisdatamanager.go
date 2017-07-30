@@ -190,7 +190,7 @@ func (this *redisDataManager) setUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SADD", userOnlineKeyName, uid)
+	ret, err := conn.Do("HSET", uid, "online", 1)
 
 	if err != nil {
 		fmt.Println("setUserOnline error:", err.Error())
@@ -208,7 +208,7 @@ func (this *redisDataManager) setUserOffline(uid uint64) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("SREM", userOnlineKeyName, uid)
+	_, err := conn.Do("HDEL", uid, "online")
 
 	if err != nil {
 		fmt.Println("setUserOffline error:", err.Error())
@@ -219,7 +219,7 @@ func (this *redisDataManager) isUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SISMEMBER", userOnlineKeyName, uid)
+	ret, err := conn.Do("HEXISTS", uid, "online")
 
 	if err != nil {
 		fmt.Println("isUserOnline error:", err.Error())

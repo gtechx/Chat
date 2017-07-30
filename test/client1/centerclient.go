@@ -27,7 +27,7 @@ func (this *CenterClient) startTick() {
 		select {
 		case <-timer.C:
 			fmt.Println("send tick to server")
-			req := new(RetTick)
+			req := new(Tick)
 			req.MsgId = MsgId_Tick
 			this.send(Bytes(req))
 			timer.Reset(time.Second * 30)

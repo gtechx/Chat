@@ -29,7 +29,7 @@ type RetLogin struct {
 
 const MsgId_Tick uint16 = 1002
 
-type RetTick struct {
+type Tick struct {
 	NullCmd
 }
 
