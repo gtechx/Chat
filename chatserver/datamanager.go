@@ -14,7 +14,7 @@ func init() {
 }
 
 type dataManager interface {
-	initialize() (bool, uint64)
+	initialize() bool
 	checkLogin(uid uint64, password string) bool
 	//server op
 	registerServer(addr string) bool
@@ -28,11 +28,11 @@ type dataManager interface {
 	pullMsg(addr string, timeout int) []byte
 
 	//user op
-	createUser(nickname, password, regip string) bool
+	createUser(nickname, password, regip string) (bool, uint64)
 	setUserOnline(uid uint64) bool
 	setUserOffline(uid uint64)
 	isUserOnline(uid uint64) bool
-	isUserExist()
+	isUserExist(uid uint64) bool
 	setUserState()
 
 	//friend op

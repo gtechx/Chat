@@ -14,7 +14,7 @@ func init() {
 	clientmap = make(map[string]*Client, 0)
 	clientdelchan = make(chan string, 1024)
 	clientaddchan = make(chan *Client, 1024)
-	startClientOp()
+	go startClientOp()
 }
 
 func newClient(conn gtnet.IConn) *Client {

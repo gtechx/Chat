@@ -22,7 +22,7 @@ const MsgId_ReqRetLogin uint16 = 1001
 
 type RetLogin struct {
 	NullCmd
-	Result byte
+	Result int8
 	IP     [16]byte
 	Port   uint16
 }
@@ -44,4 +44,11 @@ const MsgId_ReqRetLoginOut uint16 = 1004
 type RetLoginOut struct {
 	NullCmd
 	Result byte
+}
+
+const MsgId_Echo uint16 = 1005
+
+type Echo struct {
+	NullCmd
+	Data []byte
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/nature19862001/base/gtnet"
 )
 
-var centerclient *gtnet.Client
+var client *gtnet.Client
 var chatclient *gtnet.Client
 var quit chan int
 
@@ -27,28 +27,29 @@ func main() {
 	addr = *paddr
 
 	quit = make(chan int, 1)
-	centerclient = gtnet.NewClient(nettype, addr)
+	client = gtnet.NewClient(nettype, addr)
 
-	err = centerclient.Connect()
+	err = client.Connect()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	defer centerclient.Close()
-	newCenterClient(centerclient)
+	defer client.Close()
+	newCenterClient(client)
 	go startSend()
 
 	req := new(ReqLogin)
 	req.MsgId = MsgId_ReqLogin
-	req.Uid = uint64(1001)
-	copy(req.Password[0:], []byte(Md5("1")))
+	req.Uid = uint64(10001)
+	fmt.Println(Md5("123456"))
+	copy(req.Password[0:], []byte(Md5("123456")))
 	send(Bytes(req))
 
 	<-quit
 }
 
 func send(buff []byte) {
-	centerclient.Send(append(Bytes(int16(len(buff))), buff...))
+	client.Send(append(Bytes(int16(len(buff))), buff...))
 }
 
 func startSend() {
@@ -57,9 +58,14 @@ func startSend() {
 		str = ""
 		fmt.Scanln(&str)
 		if str != "" {
-			bytes := Bytes(int16(len(str)))
+			//bytes := Bytes(int16(len(str)))
+			req := new(Echo)
+			req.MsgId = MsgId_Echo
+			req.Data = []byte(str)
 			//fmt.Println(bytes)
-			chatclient.Send(append(bytes, []byte(str)...))
+			//buff := Bytes(req)
+			send(Bytes(req))
+			//chatclient.Send(append(Bytes(int16(len(buff))), buff...))
 		}
 	}
 }

@@ -26,9 +26,11 @@ func (this *CenterClient) startTick() {
 	for {
 		select {
 		case <-timer.C:
+			fmt.Println("send tick to server")
 			req := new(RetTick)
 			req.MsgId = MsgId_Tick
 			this.send(Bytes(req))
+			timer.Reset(time.Second * 30)
 		}
 	}
 }
@@ -52,13 +54,15 @@ func (this *CenterClient) ParseMsg(data []byte) {
 
 		if result == 1 {
 			this.isLogined = true
+			fmt.Println("login to server center success!")
 		} else {
 			fmt.Println("login to server center failed!")
 		}
 	case MsgId_Tick:
-
+		fmt.Println("recv tick rom server")
 	case MsgId_ReqLoginOut:
-
+	case MsgId_Echo:
+		fmt.Println("recv:" + String(data[2:]))
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}

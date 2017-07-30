@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	. "github.com/nature19862001/Chat/common"
 	. "github.com/nature19862001/Chat/protocol"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
@@ -31,9 +30,10 @@ type Client struct {
 }
 
 func (this *Client) Close() {
+	fmt.Println("client:" + this.conn.ConnAddr() + "closed")
 	if this.conn != nil {
 		if this.isVerifyed {
-			gDataManager.setUserOffline(uid)
+			gDataManager.setUserOffline(this.uid)
 			// n, err := RedisConn.Do("SREM", "user:online", String(this.uid))
 			// if err != nil {
 			// 	fmt.Println(err.Error())
@@ -63,37 +63,38 @@ func (this *Client) waitForLogin() {
 
 	select {
 	case <-this.timer.C:
-		this.timer.Stop()
 		this.lock.Lock()
 		if !this.isVerifyed {
 			this.Close()
-			this.tickChan = make(chan int, 2)
-			go this.startTick()
 		}
 		this.lock.Unlock()
 	}
+	fmt.Println("waitForLogin end")
 }
 
 func (this *Client) startTick() {
-	this.timer.Reset(time.Second * 30)
+	this.timer = time.NewTimer(time.Second * 60)
 	for {
 		select {
 		case <-this.timer.C:
+			fmt.Println("countTimeOut++")
 			this.countTimeOut++
 			if this.countTimeOut >= 2 {
 				this.timer.Stop()
 				this.Close()
 				return
 			}
+			this.timer.Reset(time.Second * 60)
 		case <-this.tickChan:
-			this.timer.Reset(time.Second * 30)
+			this.countTimeOut = 0
+			this.timer.Reset(time.Second * 60)
 		}
 	}
 }
 
 func (this *Client) ParseHeader(data []byte) int {
 	size := Int(data)
-	//fmt.Println("header size :", size)
+	fmt.Println("header size :", size)
 	//p.conn.Send(data)
 	return size
 }
@@ -104,12 +105,14 @@ func (this *Client) ParseMsg(data []byte) {
 	if this.isVerifyed {
 		this.tickChan <- 1
 	}
+	fmt.Println("msgid:", msgid)
 	switch msgid {
 	case MsgId_ReqLogin:
 		uid := Uint64(data[2:10])
 		password := data[10:]
 		ret := new(RetLogin)
 		if gDataManager.checkLogin(uid, string(password)) {
+
 			this.state = state_logined
 			this.uid = uid
 			this.password = string(password)
@@ -122,7 +125,10 @@ func (this *Client) ParseMsg(data []byte) {
 			} else {
 				this.lock.Lock()
 				this.isVerifyed = true
+				this.tickChan = make(chan int, 2)
+				go this.startTick()
 				this.lock.Unlock()
+				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
 
 			// n, err := RedisConn.Do("SADD", "user:online", String(uid))
@@ -161,6 +167,11 @@ func (this *Client) ParseMsg(data []byte) {
 		ret.MsgId = MsgId_ReqRetLoginOut
 		this.send(Bytes(ret))
 		this.state = state_logouted
+	case MsgId_Echo:
+		// ret := new(Echo)
+		// ret.MsgId = MsgId_Echo
+		// ret.Data = data[2:]
+		this.send(data)
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}

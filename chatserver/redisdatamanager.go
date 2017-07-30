@@ -8,6 +8,7 @@ import (
 )
 
 var serverListKeyName string = "serverlist"
+var userOnlineKeyName string = "user:online"
 
 type redisDataManager struct {
 	redisPool *redis.Pool
@@ -30,7 +31,7 @@ func (this *redisDataManager) initialize() bool {
 		return false
 	}
 
-	if !redis.Bool(n) {
+	if !Bool(n) {
 		_, err = conn.Do("SET", "UID", 10000)
 
 		if err != nil {
@@ -74,18 +75,10 @@ func redisOnBorrow(c redis.Conn, t time.Time) error {
 func (this *redisDataManager) registerServer(addr string) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	n, err := conn.Do("ZADD", serverListKeyName, 0, addr)
+	_, err := conn.Do("ZADD", serverListKeyName, 0, addr)
 
 	if err != nil {
 		fmt.Println("register server error:", err.Error())
-		return false
-	}
-
-	if n == nil {
-		return false
-	}
-
-	if Int(n) <= 0 {
 		return false
 	}
 
@@ -178,7 +171,7 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 
 	if err != nil {
 		fmt.Println("createUser error:", err.Error())
-		return false, -1
+		return false, 0
 	}
 
 	uid := Uint64(ret)
@@ -187,7 +180,7 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 
 	if err != nil {
 		fmt.Println("createUser error:", err.Error())
-		return false, -1
+		return false, 0
 	}
 
 	return true, uid
@@ -197,7 +190,7 @@ func (this *redisDataManager) setUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SADD", "user:online", user_pwd)
+	ret, err := conn.Do("SADD", userOnlineKeyName, uid)
 
 	if err != nil {
 		fmt.Println("setUserOnline error:", err.Error())
@@ -215,7 +208,7 @@ func (this *redisDataManager) setUserOffline(uid uint64) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SREM", "user:online", user_pwd)
+	_, err := conn.Do("SREM", userOnlineKeyName, uid)
 
 	if err != nil {
 		fmt.Println("setUserOffline error:", err.Error())
@@ -226,7 +219,7 @@ func (this *redisDataManager) isUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SISMEMBER", "user:online", user_pwd)
+	ret, err := conn.Do("SISMEMBER", userOnlineKeyName, uid)
 
 	if err != nil {
 		fmt.Println("isUserOnline error:", err.Error())
@@ -236,8 +229,18 @@ func (this *redisDataManager) isUserOnline(uid uint64) bool {
 	return Int(ret) == 1
 }
 
-func (this *redisDataManager) isUserExist() {
+func (this *redisDataManager) isUserExist(uid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("TYPE", uid)
+
+	if err != nil {
+		fmt.Println("isUserExist error:", err.Error())
+		return false
+	}
+
+	return String(ret) == "hash"
 }
 
 func (this *redisDataManager) setUserState() {
