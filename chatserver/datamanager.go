@@ -38,12 +38,12 @@ type dataManager interface {
 	//friend op
 	//reqAddFriend()
 	//agreeFriendReq()
-	addFriend()
-	deleteFriend()
-	getFriendList()
-	addFriendGroup()
-	deleteFriendGroup()
-	moveFriendToGroup()
+	addFriend() int
+	deleteFriend() int
+	getFriendList() map[string][]uint64
+	addFriendGroup() int
+	deleteFriendGroup() int
+	moveFriendToGroup() int
 	banFriend()
 	unBanFriend()
 	isFriend()

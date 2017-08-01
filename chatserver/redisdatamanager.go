@@ -190,7 +190,7 @@ func (this *redisDataManager) setUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("HSET", uid, "online", 1)
+	ret, err := conn.Do("HSET", uid, "online", serverAddr)
 
 	if err != nil {
 		fmt.Println("setUserOnline error:", err.Error())
@@ -256,39 +256,174 @@ func (this *redisDataManager) setUserState() {
 
 // }
 
-func (this *redisDataManager) addFriend() {
+func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	//check if group exists
+	ret, err := conn.Do("SISMEMBER", "fgroup:"+String(uid), group)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if Bool(ret) != true {
+		return 2
+	}
+
+	ret, err = conn.Do("SADD", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	ret, err = conn.Do("SADD", "fgroup:"+String(uid)+":"+group, fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	return 1
+}
+
+func (this *redisDataManager) deleteFriend(uid, fuid uint64) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SREM", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("deleteFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	ret, err = conn.Do("SREM", "fgroup:"+String(uid)+":"+group, fuid)
+
+	if err != nil {
+		fmt.Println("deleteFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	return 1
+}
+
+func (this *redisDataManager) getFriendList() map[string][]uint64 {
+	//
+}
+
+func (this *redisDataManager) addFriendGroup(uid uint64, groupname string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SADD", "fgroup:"+String(uid), groupname)
+
+	if err != nil {
+		fmt.Println("addFriendGroup error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	return 1
+}
+
+func (this *redisDataManager) deleteFriendGroup(uid uint64, groupname string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SREM", "fgroup:"+String(uid), groupname)
+
+	if err != nil {
+		fmt.Println("deleteFriendGroup error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	return 1
+}
+
+func (this *redisDataManager) moveFriendToGroup(uid, fuid uint64, srcgroup, destgroup string) int {
+	//check if group exists
+	ret, err := conn.Do("SISMEMBER", "fgroup:"+String(uid), srcgroup)
+
+	if err != nil {
+		fmt.Println("moveFriendToGroup error:", err.Error())
+		return -1
+	}
+
+	if Bool(ret) != true {
+		return 2
+	}
+
+	ret, err = conn.Do("SISMEMBER", "fgroup:"+String(uid), destgroup)
+
+	if err != nil {
+		fmt.Println("moveFriendToGroup error:", err.Error())
+		return -1
+	}
+
+	if Bool(ret) != true {
+		return 2
+	}
+
+	ret, err = conn.Do("SADD", "fgroup:"+String(uid)+":"+destgroup, fuid)
+
+	if err != nil {
+		fmt.Println("moveFriendToGroup error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	ret, err = conn.Do("SREM", "fgroup:"+String(uid)+":"+srcgroup, fuid)
+
+	if err != nil {
+		fmt.Println("moveFriendToGroup error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	return 1
+}
+
+func (this *redisDataManager) banFriend(uid, fuid uint64) {
 
 }
 
-func (this *redisDataManager) deleteFriend() {
+func (this *redisDataManager) unBanFriend(uid, fuid uint64) {
 
 }
 
-func (this *redisDataManager) getFriendList() {
-
-}
-
-func (this *redisDataManager) addFriendGroup() {
-
-}
-
-func (this *redisDataManager) deleteFriendGroup() {
-
-}
-
-func (this *redisDataManager) moveFriendToGroup() {
-
-}
-
-func (this *redisDataManager) banFriend() {
-
-}
-
-func (this *redisDataManager) unBanFriend() {
-
-}
-
-func (this *redisDataManager) isFriend() {
+func (this *redisDataManager) isFriend(uid, fuid uint64) {
 
 }
 
