@@ -287,7 +287,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		return 2
 	}
 
-	ret, err = conn.Do("HEXISTS", "freq", String(uid)+":"+String(fuid))
+	ret, err = conn.Do("HEXISTS", "freq", String(fuid)+":"+String(uid))
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -343,6 +343,14 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 
 	if Int(ret) != 1 {
 		return 0
+	}
+
+	//remove req key
+	ret, err = conn.Do("HDEL", "freq", String(fuid)+":"+String(uid))
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
 	}
 
 	return 1
