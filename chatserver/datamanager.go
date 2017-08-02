@@ -34,6 +34,7 @@ type dataManager interface {
 	isUserOnline(uid uint64) bool
 	isUserExist(uid uint64) bool
 	setUserState()
+	addUserToBlacklist(uid, uuid uint64) int
 
 	//friend op
 	//reqAddFriend()
