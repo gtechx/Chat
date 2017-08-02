@@ -256,6 +256,21 @@ func (this *redisDataManager) setUserState() {
 
 // }
 
+func (this *redisDataManager) addFriendReq(uid, fuid uint64, group string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	//check if group exists
+	ret, err := conn.Do("HSET", "freq", String(uid)+":"+String(fuid), group)
+
+	if err != nil {
+		fmt.Println("addFriendReq error:", err.Error())
+		return -1
+	}
+
+	return 1
+}
+
 func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
@@ -272,6 +287,19 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		return 2
 	}
 
+	ret, err = conn.Do("HEXISTS", "freq", String(uid)+":"+String(fuid))
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if !Bool(ret) {
+		//need friend request to fuid
+		return 3
+	}
+
+	//add friend
 	ret, err = conn.Do("SADD", "friend:"+String(uid), fuid)
 
 	if err != nil {
@@ -284,6 +312,29 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	}
 
 	ret, err = conn.Do("SADD", "fgroup:"+String(uid)+":"+group, fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	//add inverse friend
+	ret, err = conn.Do("SADD", "friend:"+String(fuid), uid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return -1
+	}
+
+	if Int(ret) != 1 {
+		return 0
+	}
+
+	ret, err = conn.Do("SADD", "fgroup:"+String(fuid)+":"+group, uid)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
