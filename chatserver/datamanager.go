@@ -46,7 +46,7 @@ type dataManager interface {
 	getFriendList() map[string][]uint64
 	addFriendGroup(uid uint64, groupname string) int
 	deleteFriendGroup(uid uint64, groupname string) int
-	moveFriendToGroup(uid, fuid uint64, srcgroup, destgroup string) int
+	moveFriendToGroup(uid, fuid uint64, destgroup string) int
 	banFriend()
 	unBanFriend()
 	isFriend(uid, fuid uint64) bool
