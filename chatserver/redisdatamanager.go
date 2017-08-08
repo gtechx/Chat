@@ -10,6 +10,14 @@ import (
 var serverListKeyName string = "serverlist"
 var userOnlineKeyName string = "user:online"
 
+//key			field		field	...
+//uid			nickname	password
+//fgroup:uid
+//fgroup:uid:groupname
+//friend:uid
+//black:uid
+//freq
+
 type redisDataManager struct {
 	redisPool *redis.Pool
 }
@@ -176,7 +184,7 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 
 	uid := Uint64(ret)
 
-	ret, err = conn.Do("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix())
+	ret, err = conn.Do("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix(), "maxfriends", 1000)
 
 	if err != nil {
 		fmt.Println("createUser error:", err.Error())
@@ -257,9 +265,9 @@ func (this *redisDataManager) setUserState() {
 // }
 
 func (this *redisDataManager) addUserToBlacklist(uid, uuid uint64) int {
-	if !isUserExist(uuid) {
-		return ERR_USER_NOT_EXIST
-	}
+	// if !isUserExist(uuid) {
+	// 	return ERR_USER_NOT_EXIST
+	// }
 
 	conn.Send("MULTI")
 	conn.Send("SREM", "friend:"+String(uid), uuid)
@@ -275,9 +283,23 @@ func (this *redisDataManager) addUserToBlacklist(uid, uuid uint64) int {
 	return ERR_NONE
 }
 
-//check if uid1 is in uid2's blacklist
+func (this *redisDataManager) isUserInBlacklist(uid, uuid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "black:"+String(uid), uuid)
+
+	if err != nil {
+		fmt.Println("isUserInBlacklist error:", err.Error())
+		return -1
+	}
+
+	return ERR_NONE
+}
+
+//check if uid2 is in uid1's blacklist
 func (this *redisDataManager) isInBlacklist(uid1, uid2 uint64, conn redis.Conn) bool {
-	ret, err := conn.Do("SISMEMBER", "black:"+String(uid2), uid1)
+	ret, err := conn.Do("SISMEMBER", "black:"+String(uid1), uid2)
 
 	if err != nil {
 		fmt.Println("isInBlacklist error:", err.Error())
@@ -299,7 +321,7 @@ func (this *redisDataManager) addFriendReq(uid, fuid uint64, group string) int {
 	// 	return ERR_REDIS
 	// }
 
-	if isInBlacklist(uid, fuid) {
+	if isInBlacklist(fuid, uid) {
 		return EER_FRIEND_IN_BLACKLIST
 	}
 
@@ -318,12 +340,47 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	if isInBlacklist(uid, fuid) {
+	if isInBlacklist(fuid, uid) {
 		return EER_FRIEND_IN_BLACKLIST
 	}
 
+	//check if friend is exist
+	ret, err = conn.Do("SISMEMBER", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if Bool(ret) {
+		return ERR_FRIEND_EXIST
+	}
+
+	//check if friend count is max
+	ret, err := conn.Do("HGET", uid, "maxfriends")
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	maxfriends := Int(ret)
+
+	ret, err = conn.Do("SCARD", "friend:"+String(uid))
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	curfriendcount := Int(ret)
+
+	if curfriendcount >= maxfriends {
+		return ERR_FRIEND_MAX
+	}
+
 	//check if group exists
-	ret, err := conn.Do("SISMEMBER", "fgroup:"+String(uid), group)
+	ret, err = conn.Do("SISMEMBER", "fgroup:"+String(uid), group)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -359,60 +416,6 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		return ERR_REDIS
 	}
 
-	//add friend
-	// ret, err = conn.Do("SADD", "friend:"+String(uid), fuid)
-
-	// if err != nil {
-	// 	fmt.Println("addFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
-
-	// ret, err = conn.Do("SADD", "fgroup:"+String(uid)+":"+group, fuid)
-
-	// if err != nil {
-	// 	fmt.Println("addFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
-
-	// //add inverse friend
-	// ret, err = conn.Do("SADD", "friend:"+String(fuid), uid)
-
-	// if err != nil {
-	// 	fmt.Println("addFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
-
-	// ret, err = conn.Do("SADD", "fgroup:"+String(fuid)+":"+group, uid)
-
-	// if err != nil {
-	// 	fmt.Println("addFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
-
-	// //remove req key
-	// ret, err = conn.Do("HDEL", "freq", String(fuid)+":"+String(uid))
-
-	// if err != nil {
-	// 	fmt.Println("addFriend error:", err.Error())
-	// 	return -1
-	// }
-
 	return ERR_NONE
 }
 
@@ -429,28 +432,6 @@ func (this *redisDataManager) deleteFriend(uid, fuid uint64) int {
 		fmt.Println("deleteFriend error:", err.Error())
 		return ERR_REDIS
 	}
-
-	// ret, err := conn.Do("SREM", "friend:"+String(uid), fuid)
-
-	// if err != nil {
-	// 	fmt.Println("deleteFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
-
-	// ret, err = conn.Do("SREM", "fgroup:"+String(uid)+":"+group, fuid)
-
-	// if err != nil {
-	// 	fmt.Println("deleteFriend error:", err.Error())
-	// 	return -1
-	// }
-
-	// if Int(ret) != 1 {
-	// 	return 0
-	// }
 
 	return ERR_NONE
 }
@@ -496,6 +477,21 @@ func (this *redisDataManager) deleteFriendGroup(uid uint64, groupname string) in
 }
 
 func (this *redisDataManager) moveFriendToGroup(uid, fuid uint64, srcgroup, destgroup string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	//check if friend is exist
+	ret, err = conn.Do("SISMEMBER", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if !Bool(ret) {
+		return ERR_FRIEND_NOT_EXIST
+	}
+
 	//check if group exists
 	ret, err := conn.Do("SISMEMBER", "fgroup:"+String(uid), srcgroup)
 
@@ -562,24 +558,46 @@ func (this *redisDataManager) unBanFriend(uid, fuid uint64) {
 
 }
 
-func (this *redisDataManager) isFriend(uid, fuid uint64) {
+func (this *redisDataManager) isFriend(uid, fuid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("SISMEMBER", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("getFriendVerifyType error:", err.Error())
+		return false
+	}
+
+	return Bool(ret)
 }
 
-func (this *redisDataManager) setFriendVerify() {
+func (this *redisDataManager) setFriendVerifyType(uid uint64, vtype byte) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	_, err := conn.Do("HSET", String(uid), "vtype", vtype)
+
+	if err != nil {
+		fmt.Println("setFriendVerifyType error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
 }
 
-func (this *redisDataManager) getFriendVerify() {
+func (this *redisDataManager) getFriendVerifyType() byte {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
-}
+	ret, err := conn.Do("HGET", String(uid), "vtype")
 
-func (this *redisDataManager) setFriendVerifyType() {
+	if err != nil {
+		fmt.Println("getFriendVerifyType error:", err.Error())
+		return VERIFY_TYPE_ERR
+	}
 
-}
-
-func (this *redisDataManager) getFriendVerifyType() {
-
+	return Byte(ret)
 }
 
 //message op

@@ -35,6 +35,7 @@ type dataManager interface {
 	isUserExist(uid uint64) bool
 	setUserState()
 	addUserToBlacklist(uid, uuid uint64) int
+	isUserInBlacklist(uid, uuid uint64) bool
 
 	//friend op
 	//reqAddFriend()
@@ -48,11 +49,9 @@ type dataManager interface {
 	moveFriendToGroup(uid, fuid uint64, srcgroup, destgroup string) int
 	banFriend()
 	unBanFriend()
-	isFriend()
-	setFriendVerify()
-	getFriendVerify()
-	setFriendVerifyType()
-	getFriendVerifyType()
+	isFriend(uid, fuid uint64) bool
+	setFriendVerifyType(uid uint64, vtype byte) int
+	getFriendVerifyType() byte
 
 	//message op
 	sendMsgToUser()
