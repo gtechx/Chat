@@ -528,7 +528,7 @@ func (this *redisDataManager) getFriendList() map[string][]uint64 {
 	}
 
 	for i := 0; i < len(groupcountarr); i++ {
-		count := grouparr[i]
+		groupname := grouparr[i]
 		groupfriendcount := groupcountarr[i]
 
 		for j := 0; j < groupfriendcount; j++ {
