@@ -130,21 +130,6 @@ func (this *Client) ParseMsg(data []byte) {
 				this.lock.Unlock()
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
-
-			// n, err := RedisConn.Do("SADD", "user:online", String(uid))
-			// if err != nil {
-			// 	fmt.Println(err.Error())
-			// }
-			// if n == nil {
-			// 	fmt.Println("sadd cmd failed!")
-			// }
-			// n, err = RedisConn.Do("SADD", "user:online:password", string(password))
-			// if err != nil {
-			// 	fmt.Println(err.Error())
-			// }
-			// if n == nil {
-			// 	fmt.Println("sadd cmd failed!")
-			// }
 		} else {
 			ret.Result = 0
 			this.verfiycount++
@@ -172,6 +157,10 @@ func (this *Client) ParseMsg(data []byte) {
 		// ret.MsgId = MsgId_Echo
 		// ret.Data = data[2:]
 		this.send(data)
+	case MsgId_ReqFriendList:
+	case MsgId_ReqFriendAdd:
+	case MsgId_ReqFriendDel:
+	case MsgId_ReqUserToBlack:
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}
