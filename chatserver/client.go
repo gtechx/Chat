@@ -110,7 +110,7 @@ func (this *Client) ParseMsg(data []byte) {
 	case MsgId_ReqLogin:
 		uid := Uint64(data[2:10])
 		password := data[10:]
-		ret := new(RetLogin)
+		ret := new(MsgRetLogin)
 		if gDataManager.checkLogin(uid, string(password)) {
 
 			this.state = state_logined
@@ -158,11 +158,11 @@ func (this *Client) ParseMsg(data []byte) {
 		ret.MsgId = MsgId_ReqRetLogin
 		this.send(Bytes(ret))
 	case MsgId_Tick:
-		ret := new(Tick)
+		ret := new(MsgTick)
 		ret.MsgId = MsgId_Tick
 		this.send(Bytes(ret))
 	case MsgId_ReqLoginOut:
-		ret := new(RetLoginOut)
+		ret := new(MsgRetLoginOut)
 		ret.Result = 1
 		ret.MsgId = MsgId_ReqRetLoginOut
 		this.send(Bytes(ret))
