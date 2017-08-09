@@ -12,12 +12,13 @@ var serverListKeyName string = "serverlist"
 var userOnlineKeyName string = "user:online"
 var defaultGroupName string = "我的好友"
 
-//key					field		field	...
-//uid			hashes	nickname	password
-//fgroup:uid	sets
-//friend:uid	hashes	fuid		group(n)	groupname
-//black:uid		sets
-//freq			hashes	uid:fuid
+//key							field		field	...
+//uid				hashes		nickname	password
+//fgroup:uid		sets
+//friend:uid		hashes		fuid
+//friend:group:uid	hashes		group:(n)	groupname
+//black:uid			sets
+//freq				hashes		uid:fuid
 
 type redisDataManager struct {
 	redisPool *redis.Pool
@@ -248,14 +249,14 @@ func (this *redisDataManager) isUserExist(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("TYPE", uid)
+	ret, err := conn.Do("EXISTS", uid)
 
 	if err != nil {
 		fmt.Println("isUserExist error:", err.Error())
 		return false
 	}
 
-	return String(ret) == "hash"
+	return Bool(ret)
 }
 
 func (this *redisDataManager) setUserState() {
@@ -275,12 +276,14 @@ func (this *redisDataManager) addUserToBlacklist(uid, uuid uint64) int {
 	// if !isUserExist(uuid) {
 	// 	return ERR_USER_NOT_EXIST
 	// }
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
 	conn.Send("MULTI")
 	conn.Send("HDEL", "friend:"+String(uid), uuid)
 	//conn.Send("HDEL", "fgroup:"+String(uid)+":"+group, fuid)
-	conn.Send("SADD", "black:"+String(fuid), uid)
-	_, err = conn.Do("EXEC")
+	conn.Send("SADD", "black:"+String(uuid), uid)
+	_, err := conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("addUserToBlacklist error:", err.Error())
@@ -298,10 +301,10 @@ func (this *redisDataManager) isUserInBlacklist(uid, uuid uint64) bool {
 
 	if err != nil {
 		fmt.Println("isUserInBlacklist error:", err.Error())
-		return -1
+		return false
 	}
 
-	return ERR_NONE
+	return Bool(ret)
 }
 
 //check if uid2 is in uid1's blacklist
@@ -328,12 +331,12 @@ func (this *redisDataManager) addFriendReq(uid, fuid uint64, group string) int {
 	// 	return ERR_REDIS
 	// }
 
-	if isInBlacklist(fuid, uid) {
-		return EER_FRIEND_IN_BLACKLIST
+	if this.isInBlacklist(fuid, uid, conn) {
+		return ERR_FRIEND_IN_BLACKLIST
 	}
 
 	//check if group exists
-	ret, err := conn.Do("HSET", "freq", String(uid)+":"+String(fuid), group)
+	_, err := conn.Do("HSET", "freq", String(uid)+":"+String(fuid), group)
 
 	if err != nil {
 		fmt.Println("addFriendReq error:", err.Error())
@@ -347,12 +350,12 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	if isInBlacklist(fuid, uid) {
-		return EER_FRIEND_IN_BLACKLIST
+	if this.isInBlacklist(fuid, uid, conn) {
+		return ERR_FRIEND_IN_BLACKLIST
 	}
 
 	//check if friend is exist
-	ret, err = conn.Do("SISMEMBER", "friend:"+String(uid), fuid)
+	ret, err := conn.Do("SISMEMBER", "friend:"+String(uid), fuid)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -363,8 +366,20 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		return ERR_FRIEND_EXIST
 	}
 
+	//check if fuid is exists
+	ret, err = conn.Do("HEXISTS", fuid)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if Bool(ret) {
+		return ERR_USER_NOT_EXIST
+	}
+
 	//check if friend count is max
-	ret, err := conn.Do("HGET", uid, "maxfriends")
+	ret, err = conn.Do("HGET", uid, "maxfriends")
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -413,7 +428,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 
 	fuidgroup := String(ret)
 
-	ret, err = conn.Do("HGET", "friend:"+String(uid), group)
+	ret, err = conn.Do("HGET", "friend:group:"+String(uid), group)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -426,7 +441,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		groupuidcount = Int(ret)
 	}
 
-	ret, err = conn.Do("HGET", "friend:"+String(fuid), fuidgroup)
+	ret, err = conn.Do("HGET", "friend:group:"+String(fuid), fuidgroup)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -441,12 +456,12 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 
 	conn.Send("MULTI")
 	conn.Send("HSET", "friend:"+String(uid), fuid, group+":"+String(groupuidcount))
-	conn.Send("HSET", "friend:"+String(uid), group+":"+String(groupuidcount), fuid)
-	conn.Send("HINCRBY", "friend:"+String(uid), group, 1)
+	conn.Send("HSET", "friend:group:"+String(uid), group+":"+String(groupuidcount), fuid)
+	conn.Send("HINCRBY", "friend:group:"+String(uid), group, 1)
 
 	conn.Send("HSET", "friend:"+String(fuid), uid, fuidgroup+":"+String(fuidgroupuidcount))
-	conn.Send("HSET", "friend:"+String(fuid), fuidgroup+":"+String(fuidgroupuidcount), uid)
-	conn.Send("HINCRBY", "friend:"+String(fuid), fuidgroup, 1)
+	conn.Send("HSET", "friend:group:"+String(fuid), fuidgroup+":"+String(fuidgroupuidcount), uid)
+	conn.Send("HINCRBY", "friend:group:"+String(fuid), fuidgroup, 1)
 
 	conn.Send("HDEL", "freq", String(fuid)+":"+String(uid))
 	_, err = conn.Do("EXEC")
@@ -481,10 +496,10 @@ func (this *redisDataManager) deleteFriend(uid, fuid uint64) int {
 
 	conn.Send("MULTI")
 	conn.Send("HDEL", "friend:"+String(uid), fuid)
-	conn.Send("HDEL", "friend:"+String(uid), groupstr)
-	conn.Send("HINCRBY", "friend:"+String(uid), group, -1)
+	conn.Send("HDEL", "friend:group:"+String(uid), groupstr)
+	conn.Send("HINCRBY", "friend:group:"+String(uid), group, -1)
 	//conn.Send("SREM", "fgroup:"+String(uid)+":"+group, fuid)
-	_, err := conn.Do("EXEC")
+	_, err = conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("deleteFriend error:", err.Error())
@@ -494,9 +509,12 @@ func (this *redisDataManager) deleteFriend(uid, fuid uint64) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) getFriendList() map[string][]uint64 {
+func (this *redisDataManager) getFriendList(uid uint64) map[string][]uint64 {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
 	//
-	ret, err := conn.Do("SMEMBERS", "fgroup:"+String(uid))
+	ret, err := conn.Do("HGETALL", "friend:group:"+String(uid))
 
 	if err != nil {
 		fmt.Println("getFriendList error:", err.Error())
@@ -504,51 +522,27 @@ func (this *redisDataManager) getFriendList() map[string][]uint64 {
 	}
 
 	if ret == nil {
-		return map[string]uint64{}
+		return map[string][]uint64{}
 	}
 
-	grouparr, err := redis.Strings(ret, err)
+	dataarr, err := redis.Strings(ret, err)
 	retdata := map[string][]uint64{}
 
-	for i := 0; i < len(grouparr); i++ {
-		conn.Send("HGET", "friend:"+String(uid), grouparr[i])
-	}
-	ret, err = conn.Do("")
-
-	if err != nil {
-		fmt.Println("getFriendList error:", err.Error())
-		return map[string][]uint64{}
-	}
-
-	var groupcountarr []int
-	err = redis.ScanSlice(ret, &groupcountarr)
-
-	if err != nil {
-		return map[string][]uint64{}
-	}
-
-	for i := 0; i < len(groupcountarr); i++ {
-		groupname := grouparr[i]
-		groupfriendcount := groupcountarr[i]
-
-		for j := 0; j < groupfriendcount; j++ {
-			conn.Send("HGET", "friend:"+String(uid), groupname+String(j))
+	for i := 0; i < len(dataarr); i += 2 {
+		groupstr := dataarr[i]
+		groupstrarr := strings.Split(groupstr, ":")
+		if len(groupstrarr) <= 1 {
+			continue
 		}
+		groupname := groupstrarr[0]
 
-		ret, err = conn.Do("")
+		_, ok := retdata[groupname]
 
-		if err != nil {
-			fmt.Println("getFriendList error:", err.Error())
-			return map[string][]uint64{}
+		fuid := Uint64(groupstrarr[1])
+		if !ok {
+			retdata[groupname] = make([]uint64, 0)
 		}
-
-		var uidarr []uint64
-		err = redis.ScanSlice(ret, &uidarr)
-
-		if err != nil {
-			return map[string][]uint64{}
-		}
-		retdata[groupname] = uidarr
+		retdata[groupname] = append(retdata[groupname], fuid)
 	}
 
 	return retdata
@@ -576,7 +570,7 @@ func (this *redisDataManager) deleteFriendGroup(uid uint64, groupname string) in
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("HGET", "friend:"+String(uid), groupname)
+	ret, err := conn.Do("HGET", "friend:group:"+String(uid), groupname)
 
 	if err != nil {
 		fmt.Println("deleteFriendGroup error:", err.Error())
@@ -587,7 +581,7 @@ func (this *redisDataManager) deleteFriendGroup(uid uint64, groupname string) in
 		return ERR_FRIEND_GROUP_USER_NOT_EMPTY
 	}
 
-	ret, err := conn.Do("SREM", "fgroup:"+String(uid), groupname)
+	ret, err = conn.Do("SREM", "fgroup:"+String(uid), groupname)
 
 	if err != nil {
 		fmt.Println("deleteFriendGroup error:", err.Error())
@@ -658,7 +652,7 @@ func (this *redisDataManager) moveFriendToGroup(uid, fuid uint64, destgroup stri
 	}
 
 	//get destgroup count
-	ret, err = conn.Do("HGET", "friend:"+String(uid), destgroup)
+	ret, err = conn.Do("HGET", "friend:group:"+String(uid), destgroup)
 
 	if err != nil {
 		fmt.Println("moveFriendToGroup error:", err.Error())
@@ -674,13 +668,13 @@ func (this *redisDataManager) moveFriendToGroup(uid, fuid uint64, destgroup stri
 	conn.Send("MULTI")
 	//remove from current group
 	conn.Send("HDEL", "friend:"+String(uid), fuid)
-	conn.Send("HDEL", "friend:"+String(uid), groupstr)
-	conn.Send("HINCRBY", "friend:"+String(uid), curgroup, -1)
+	conn.Send("HDEL", "friend:group:"+String(uid), groupstr)
+	conn.Send("HINCRBY", "friend:group:"+String(uid), curgroup, -1)
 
 	//add to dest group
 	conn.Send("HSET", "friend:"+String(uid), fuid, destgroup+":"+String(destgroupcount))
-	conn.Send("HSET", "friend:"+String(uid), destgroup+":"+String(destgroupcount), fuid)
-	conn.Send("HINCRBY", "friend:"+String(uid), destgroup, 1)
+	conn.Send("HSET", "friend:group:"+String(uid), destgroup+":"+String(destgroupcount), fuid)
+	conn.Send("HINCRBY", "friend:group:"+String(uid), destgroup, 1)
 
 	// conn.Send("SADD", "fgroup:"+String(uid)+":"+destgroup, fuid)
 	// conn.Send("SREM", "fgroup:"+String(uid)+":"+srcgroup, fuid)
@@ -752,7 +746,7 @@ func (this *redisDataManager) setFriendVerifyType(uid uint64, vtype byte) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) getFriendVerifyType() byte {
+func (this *redisDataManager) getFriendVerifyType(uid uint64) byte {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 

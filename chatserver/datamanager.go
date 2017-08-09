@@ -40,18 +40,18 @@ type dataManager interface {
 	//friend op
 	//reqAddFriend()
 	//agreeFriendReq()
-	addFriendReq() int
+	addFriendReq(uid, fuid uint64, group string) int
 	addFriend(uid, fuid uint64, group string) int
 	deleteFriend(uid, fuid uint64) int
-	getFriendList() map[string][]uint64
+	getFriendList(uid uint64) map[string][]uint64
 	addFriendGroup(uid uint64, groupname string) int
 	deleteFriendGroup(uid uint64, groupname string) int
 	moveFriendToGroup(uid, fuid uint64, destgroup string) int
-	banFriend()
-	unBanFriend()
+	banFriend(uid, fuid uint64)
+	unBanFriend(uid, fuid uint64)
 	isFriend(uid, fuid uint64) bool
 	setFriendVerifyType(uid uint64, vtype byte) int
-	getFriendVerifyType() byte
+	getFriendVerifyType(uid uint64) byte
 
 	//message op
 	sendMsgToUser()
