@@ -7,12 +7,15 @@ package protocol
 // )
 
 const (
-	MsgId_ReqLogin uint16 = iota + 1000
+	MsgId_Tick uint16 = iota + 1000
+	MsgId_Error
+	MsgId_Echo
+
+	MsgId_ReqLogin
 	MsgId_ReqRetLogin
-	MsgId_Tick
+
 	MsgId_ReqLoginOut
 	MsgId_ReqRetLoginOut
-	MsgId_Echo
 	MsgId_ReqFriendList
 	MsgId_RetFriendList
 	MsgId_ReqFriendAdd
@@ -31,6 +34,29 @@ type NullCmd struct {
 	MsgId uint16
 }
 
+type MsgError struct {
+	NullCmd
+	ErrorCode uint16
+	ErrMsgId  uint16
+}
+
+func NewErrorMsg(errcode, errmsgid uint16) *MsgError {
+	msg := new(MsgError)
+	msg.MsgId = MsgId_Error
+	msg.ErrorCode = errcode
+	msg.ErrMsgId = errmsgid
+	return new(MsgError)
+}
+
+type MsgTick struct {
+	NullCmd
+}
+
+type MsgEcho struct {
+	NullCmd
+	Data []byte
+}
+
 type MsgReqLogin struct {
 	NullCmd
 	Uid      uint64
@@ -44,10 +70,6 @@ type MsgRetLogin struct {
 	Port   uint16
 }
 
-type MsgTick struct {
-	NullCmd
-}
-
 type MsgReqLoginOut struct {
 	NullCmd
 }
@@ -55,11 +77,6 @@ type MsgReqLoginOut struct {
 type MsgRetLoginOut struct {
 	NullCmd
 	Result byte
-}
-
-type MsgEcho struct {
-	NullCmd
-	Data []byte
 }
 
 type MsgReqFriendList struct {
@@ -76,6 +93,11 @@ type MsgReqFriendAdd struct {
 	NullCmd
 	Fuid  uint64
 	Group []byte
+}
+
+type MsgFriendReq struct {
+	NullCmd
+	Fuid uint64
 }
 
 type MsgFriendReqAgree struct {

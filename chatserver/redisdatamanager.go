@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	. "github.com/nature19862001/base/common"
@@ -509,7 +510,7 @@ func (this *redisDataManager) deleteFriend(uid, fuid uint64) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) getFriendList(uid uint64) map[string][]uint64 {
+func (this *redisDataManager) getFriendList(uid uint64) (map[string][]uint64, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -518,11 +519,11 @@ func (this *redisDataManager) getFriendList(uid uint64) map[string][]uint64 {
 
 	if err != nil {
 		fmt.Println("getFriendList error:", err.Error())
-		return map[string][]uint64{}
+		return map[string][]uint64{}, errors.New("redis err:" + err.Error())
 	}
 
 	if ret == nil {
-		return map[string][]uint64{}
+		return map[string][]uint64{}, nil
 	}
 
 	dataarr, err := redis.Strings(ret, err)
@@ -545,7 +546,7 @@ func (this *redisDataManager) getFriendList(uid uint64) map[string][]uint64 {
 		retdata[groupname] = append(retdata[groupname], fuid)
 	}
 
-	return retdata
+	return retdata, nil
 }
 
 func (this *redisDataManager) addFriendGroup(uid uint64, groupname string) int {

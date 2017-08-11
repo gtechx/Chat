@@ -16,6 +16,18 @@ const (
 	state_logouted  int = 3
 )
 
+var msgProcesserMap map[uint16]func(*Client, []byte)
+
+func init() {
+	msgProcesserMap = make(map[uint16]func(*Client, []byte))
+	msgProcesserMap[MsgId_ReqFriendList] = OnReqFriendList
+	msgProcesserMap[MsgId_ReqFriendAdd] = OnReqFriendAdd
+	msgProcesserMap[MsgId_ReqFriendDel] = OnReqFriendDel
+	msgProcesserMap[MsgId_ReqUserToBlack] = OnReqUserToBlack
+	msgProcesserMap[MsgId_ReqMoveFriendToGroup] = OnReqMoveFriendToGroup
+	msgProcesserMap[MsgId_ReqSetFriendVerifyType] = OnReqSetFriendVerifyType
+}
+
 type Client struct {
 	conn         gtnet.IConn
 	lock         *sync.Mutex
@@ -157,12 +169,13 @@ func (this *Client) ParseMsg(data []byte) {
 		// ret.MsgId = MsgId_Echo
 		// ret.Data = data[2:]
 		this.send(data)
-	case MsgId_ReqFriendList:
-	case MsgId_ReqFriendAdd:
-	case MsgId_ReqFriendDel:
-	case MsgId_ReqUserToBlack:
 	default:
-		fmt.Println("unknow msgid:", msgid)
+		fn, ok := msgProcesserMap[msgid]
+		if ok {
+			fn(this, data[2:])
+		} else {
+			fmt.Println("unknown msgid:", msgid)
+		}
 	}
 }
 

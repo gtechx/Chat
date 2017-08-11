@@ -43,7 +43,7 @@ type dataManager interface {
 	addFriendReq(uid, fuid uint64, group string) int
 	addFriend(uid, fuid uint64, group string) int
 	deleteFriend(uid, fuid uint64) int
-	getFriendList(uid uint64) map[string][]uint64
+	getFriendList(uid uint64) (map[string][]uint64, error)
 	addFriendGroup(uid uint64, groupname string) int
 	deleteFriendGroup(uid uint64, groupname string) int
 	moveFriendToGroup(uid, fuid uint64, destgroup string) int
