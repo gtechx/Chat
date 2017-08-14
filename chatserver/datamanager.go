@@ -54,7 +54,7 @@ type dataManager interface {
 	getFriendVerifyType(uid uint64) byte
 
 	//message op
-	sendMsgToUser()
+	sendMsgToUser(uid uint64, data []byte) int
 	sendMsgToRoom()
 
 	//room op

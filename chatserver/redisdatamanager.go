@@ -159,7 +159,7 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("BLPOP", "msg"+addr, timeout)
+	ret, err := conn.Do("BLPOP", "msg:"+addr, timeout)
 
 	if err != nil {
 		fmt.Println("pullMsg error:", err.Error())
@@ -737,7 +737,7 @@ func (this *redisDataManager) setFriendVerifyType(uid uint64, vtype byte) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("HSET", String(uid), "vtype", vtype)
+	_, err := conn.Do("HSET", uid, "vtype", vtype)
 
 	if err != nil {
 		fmt.Println("setFriendVerifyType error:", err.Error())
@@ -751,7 +751,7 @@ func (this *redisDataManager) getFriendVerifyType(uid uint64) byte {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("HGET", String(uid), "vtype")
+	ret, err := conn.Do("HGET", uid, "vtype")
 
 	if err != nil {
 		fmt.Println("getFriendVerifyType error:", err.Error())
@@ -762,8 +762,37 @@ func (this *redisDataManager) getFriendVerifyType(uid uint64) byte {
 }
 
 //message op
-func (this *redisDataManager) sendMsgToUser() {
+func (this *redisDataManager) sendMsgToUser(uid uint64, data []byte) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
 
+	ret, err := conn.Do("HGET", uid, "online")
+
+	if err != nil {
+		fmt.Println("sendMsgToUser error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if ret != nil {
+		// if online
+		serveraddr := String(ret)
+		ret, err = conn.Do("RPUSH", "msg:"+serveraddr, data)
+
+		if err != nil {
+			fmt.Println("sendMsgToUser error:", err.Error())
+			return ERR_REDIS
+		}
+	} else {
+		//else not online
+		ret, err = conn.Do("RPUSH", "offline:"+String(uid), data)
+
+		if err != nil {
+			fmt.Println("sendMsgToUser error:", err.Error())
+			return ERR_REDIS
+		}
+	}
+
+	return ERR_NONE
 }
 
 func (this *redisDataManager) sendMsgToRoom() {
