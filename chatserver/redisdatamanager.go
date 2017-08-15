@@ -596,6 +596,25 @@ func (this *redisDataManager) deleteFriendGroup(uid uint64, groupname string) in
 	return ERR_NONE
 }
 
+func (this *redisDataManager) getGroupOfFriend(uid, fuid uint64) (string, int) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	//check if friend is exist
+	ret, err := conn.Do("HGET", "friend:"+String(uid), fuid)
+
+	if err != nil {
+		fmt.Println("getGroupOfFriend error:", err.Error())
+		return "", ERR_REDIS
+	}
+
+	if ret == nil {
+		return "", ERR_FRIEND_NOT_EXIST
+	}
+
+	return String(ret), ERR_NONE
+}
+
 func (this *redisDataManager) moveFriendToGroup(uid, fuid uint64, destgroup string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()

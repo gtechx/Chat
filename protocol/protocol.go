@@ -16,19 +16,26 @@ const (
 
 	MsgId_ReqLoginOut
 	MsgId_ReqRetLoginOut
+
 	MsgId_ReqFriendList
 	MsgId_RetFriendList
+
 	MsgId_ReqFriendAdd
-	MsgId_ReqFriendAddSuccess
+	MsgId_RetFriendAdd
+
 	MsgId_FriendReqAgree
 	MsgId_FriendReq
 	MsgId_FriendReqSuccess
+
 	MsgId_ReqFriendDel
-	MsgId_FriendDelSuccess
+	MsgId_RetFriendDel
+
 	MsgId_ReqUserToBlack
 	MsgId_RetUserToBlack
+
 	MsgId_ReqMoveFriendToGroup
 	MsgId_RetMoveFriendToGroup
+
 	MsgId_ReqSetFriendVerifyType
 	MsgId_RetSetFriendVerifyType
 )
@@ -99,6 +106,13 @@ type MsgReqFriendAdd struct {
 	Group []byte
 }
 
+type MsgRetFriendAdd struct {
+	NullCmd
+	Result uint16
+	Fuid   uint64
+	Group  []byte
+}
+
 type MsgFriendReq struct {
 	NullCmd
 	Fuid uint64
@@ -123,13 +137,16 @@ type MsgReqFriendDel struct {
 	Fuid uint64
 }
 
-type MsgFriendDelSucess struct {
+type MsgRetFriendDel struct {
 	NullCmd
+	Result uint16
+	Fuid   uint64
 }
 
 type MsgReqUserToBlack struct {
 	NullCmd
-	Fuid uint64
+	Result uint16
+	Fuid   uint64
 }
 
 type MsgRetUserToBlack struct {
