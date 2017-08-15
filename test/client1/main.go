@@ -18,8 +18,8 @@ var addr string = "127.0.0.1:9090"
 func main() {
 	var err error
 
-	pnet := flag.String("net", "tcp", "-net=")
-	paddr := flag.String("addr", "127.0.0.1:9090", "-addr=")
+	pnet := flag.String("net", nettype, "-net=")
+	paddr := flag.String("addr", addr, "-addr=")
 
 	flag.Parse()
 
@@ -38,7 +38,7 @@ func main() {
 	newCenterClient(client)
 	go startSend()
 
-	req := new(ReqLogin)
+	req := new(MsgReqLogin)
 	req.MsgId = MsgId_ReqLogin
 	req.Uid = uint64(10001)
 	fmt.Println(Md5("123456"))
@@ -59,7 +59,7 @@ func startSend() {
 		fmt.Scanln(&str)
 		if str != "" {
 			//bytes := Bytes(int16(len(str)))
-			req := new(Echo)
+			req := new(MsgEcho)
 			req.MsgId = MsgId_Echo
 			req.Data = []byte(str)
 			//fmt.Println(bytes)

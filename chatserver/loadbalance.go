@@ -57,13 +57,15 @@ func register(rw http.ResponseWriter, req *http.Request) {
 	ret += "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
 	ret += "<title>register</title>"
 	ret += "<meta content=\"GTech Inc.\" name=\"Copyright\" />"
+	ret += "<script src=\"http://cdn.bootcss.com/blueimp-md5/1.1.0/js/md5.min.js\"></script>"
 	ret += "</head>"
 	ret += "<body>"
 
-	ret += "<form method=\"post\" action=\"/create\">"
+	ret += "<form method=\"post\" action=\"/create\" onsubmit=\"return true;\">"
 	ret += "昵称：<input type=\"text\" name=\"nickname\" />"
 	ret += "<br/>"
-	ret += "密码：<input type=\"password\" name=\"password\" />"
+	ret += "密码：<input type=\"password\" name=\"password1\" oninput=\"document.getElementById('password').value = md5(this.value);\" onpropertychange=\"document.getElementById('password').value = md5(this.value);\" />"
+	ret += "<input type=\"hidden\" name=\"password\" id=\"password\" />"
 	ret += "<br/>"
 	ret += "<input type=\"submit\" name=\"login_button\" value=\"提交\">"
 	ret += "</form>"
@@ -102,7 +104,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		ret += "<br/>"
 		ret += "<input type=\"submit\" name=\"login_button\" value=\"提交\">"
 		ret += "</form>"
-		io.WriteString(rw, ret)
+		//io.WriteString(rw, ret)
 		goto end
 	}
 
@@ -118,7 +120,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		ret += "<br/>"
 		ret += "<input type=\"submit\" name=\"login_button\" value=\"提交\">"
 		ret += "</form>"
-		io.WriteString(rw, ret)
+		//io.WriteString(rw, ret)
 		goto end
 	}
 
@@ -134,7 +136,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		ret += "<br/>"
 		ret += "<input type=\"submit\" name=\"login_button\" value=\"提交\">"
 		ret += "</form>"
-		io.WriteString(rw, ret)
+		//io.WriteString(rw, ret)
 		goto end
 	}
 
@@ -152,7 +154,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		ret += "<br/>"
 		ret += "<input type=\"submit\" name=\"login_button\" value=\"提交\">"
 		ret += "</form>"
-		io.WriteString(rw, ret)
+		//io.WriteString(rw, ret)
 		goto end
 	}
 

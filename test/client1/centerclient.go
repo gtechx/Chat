@@ -17,7 +17,6 @@ func newCenterClient(client *gtnet.Client) *CenterClient {
 	pro := &CenterClient{client: client}
 	client.SetMsgParser(pro)
 	client.SetListener(pro)
-	go pro.startTick()
 	return pro
 }
 
@@ -27,7 +26,7 @@ func (this *CenterClient) startTick() {
 		select {
 		case <-timer.C:
 			fmt.Println("send tick to server")
-			req := new(Tick)
+			req := new(MsgTick)
 			req.MsgId = MsgId_Tick
 			this.send(Bytes(req))
 			timer.Reset(time.Second * 30)
@@ -50,13 +49,14 @@ func (this *CenterClient) ParseMsg(data []byte) {
 
 	switch msgid {
 	case MsgId_ReqRetLogin:
-		result := Byte(data[2:4])
+		result := Uint16(data[2:4])
 
-		if result == 1 {
+		if result == 0 {
 			this.isLogined = true
 			fmt.Println("login to server center success!")
+			go this.startTick()
 		} else {
-			fmt.Println("login to server center failed!")
+			fmt.Println("login to server center failed! errcode:", result)
 		}
 	case MsgId_Tick:
 		fmt.Println("recv tick rom server")

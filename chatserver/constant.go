@@ -12,6 +12,7 @@ const (
 	//user error
 	ERR_USER = iota + 1100
 	ERR_USER_NOT_EXIST
+	ERR_PASSWORD_INVALID
 
 	//user error
 	ERR_FRIEND = iota + 1200

@@ -54,10 +54,6 @@ func (this *redisDataManager) initialize() bool {
 	return true
 }
 
-func (this *redisDataManager) checkLogin(uid uint64, password string) bool {
-	return true
-}
-
 func redisDial() (redis.Conn, error) {
 	c, err := redis.Dial("tcp", redisAddr)
 	if err != nil {
@@ -80,6 +76,27 @@ func redisOnBorrow(c redis.Conn, t time.Time) error {
 	}
 	_, err := c.Do("PING")
 	return err
+}
+
+func (this *redisDataManager) checkLogin(uid uint64, password string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	ret, err := conn.Do("HGET", uid, "password")
+
+	if err != nil {
+		fmt.Println("checkLogin error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if ret == nil {
+		return ERR_USER_NOT_EXIST
+	}
+
+	if String(ret) != password {
+		return ERR_PASSWORD_INVALID
+	}
+
+	return ERR_NONE
 }
 
 //server op

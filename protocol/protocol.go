@@ -75,9 +75,9 @@ type MsgReqLogin struct {
 
 type MsgRetLogin struct {
 	NullCmd
-	Result int8
-	IP     [16]byte
-	Port   uint16
+	Result uint16
+	//IP     [16]byte
+	//Port   uint16
 }
 
 type MsgReqLoginOut struct {

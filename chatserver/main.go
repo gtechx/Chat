@@ -13,15 +13,15 @@ var quit chan int
 var nettype string = "tcp"
 var serverAddr string = "127.0.0.1:9090"
 var redisNet string = "tcp"
-var redisAddr string = "192.168.1.54:6379"
+var redisAddr string = "192.168.93.16:6379"
 
 func main() {
 	//var err error
 
-	pnet := flag.String("net", "tcp", "-net=")
-	paddr := flag.String("addr", "127.0.0.1:9090", "-addr=")
-	predisnet := flag.String("redisnet", "tcp", "-redisnet=")
-	predisaddr := flag.String("redisaddr", "192.168.1.54:6379", "-redisaddr=")
+	pnet := flag.String("net", nettype, "-net=")
+	paddr := flag.String("addr", serverAddr, "-addr=")
+	predisnet := flag.String("redisnet", redisNet, "-redisnet=")
+	predisaddr := flag.String("redisaddr", redisAddr, "-redisaddr=")
 
 	flag.Parse()
 

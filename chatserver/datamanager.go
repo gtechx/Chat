@@ -15,7 +15,7 @@ func init() {
 
 type dataManager interface {
 	initialize() bool
-	checkLogin(uid uint64, password string) bool
+	checkLogin(uid uint64, password string) int
 	//server op
 	registerServer(addr string) bool
 	incrServerClientCountBy(addr string, count int)

@@ -116,6 +116,9 @@ func (this *Client) ParseMsg(data []byte) {
 	msgid := Uint16(data)
 	if this.isVerifyed {
 		this.tickChan <- 1
+	} else if msgid != MsgId_ReqLogin {
+		//if not logined, do not response to any msg
+		return
 	}
 	fmt.Println("msgid:", msgid)
 	switch msgid {
@@ -123,17 +126,17 @@ func (this *Client) ParseMsg(data []byte) {
 		uid := Uint64(data[2:10])
 		password := data[10:]
 		ret := new(MsgRetLogin)
-		if gDataManager.checkLogin(uid, string(password)) {
-
+		code := gDataManager.checkLogin(uid, string(password))
+		if code == ERR_NONE {
 			this.state = state_logined
 			this.uid = uid
 			this.password = string(password)
-			ret.Result = 1
-			copy(ret.IP[0:], []byte("127.0.0.1"))
-			ret.Port = 9090
+			ret.Result = uint16(ERR_NONE)
+			//copy(ret.IP[0:], []byte("127.0.0.1"))
+			//ret.Port = 9090
 			ok := gDataManager.setUserOnline(uid)
 			if !ok {
-				ret.Result = -1
+				ret.Result = uint16(ERR_REDIS)
 			} else {
 				this.lock.Lock()
 				this.isVerifyed = true
@@ -143,7 +146,7 @@ func (this *Client) ParseMsg(data []byte) {
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
 		} else {
-			ret.Result = 0
+			ret.Result = uint16(code)
 			this.verfiycount++
 
 			if this.verfiycount < 5 {
