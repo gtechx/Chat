@@ -6,16 +6,17 @@ import (
 )
 
 func OnReqFriendList(client *Client, data []byte) {
-	flist, err := gDataManager.getFriendList(client.uid)
+	flist, ret := gDataManager.getFriendList(client.uid)
 
-	if err != nil {
-		reterr := NewErrorMsg(ERR_REDIS, MsgId_ReqFriendList)
-		client.send(Bytes(reterr))
-		return
-	}
+	// if err != nil {
+	// 	reterr := NewErrorMsg(ERR_REDIS, MsgId_ReqFriendList)
+	// 	client.send(Bytes(reterr))
+	// 	return
+	// }
 
 	retmsg := new(MsgRetFriendList)
 	retmsg.MsgId = MsgId_RetFriendList
+	retmsg.Result = uint16(ret)
 	retmsg.GroupCount = byte(len(flist))
 
 	data = []byte{}
@@ -106,23 +107,37 @@ func OnReqUserToBlack(client *Client, data []byte) {
 	case ERR_REDIS:
 		retmsg := new(MsgRetUserToBlack)
 		retmsg.MsgId = MsgId_RetUserToBlack
-		retmsg.Result = byte(0)
+		retmsg.Result = uint16(ERR_REDIS)
 		retmsg.Fuid = fuid
 		client.send(Bytes(retmsg))
 	case ERR_NONE:
 		//send add success msg to client
 		retmsg := new(MsgRetUserToBlack)
 		retmsg.MsgId = MsgId_RetUserToBlack
-		retmsg.Result = byte(1)
+		retmsg.Result = uint16(0)
 		retmsg.Fuid = fuid
 		client.send(Bytes(retmsg))
 	}
 }
 
 func OnReqMoveFriendToGroup(client *Client, data []byte) {
+	fuid := Uint64(data)
+	group := data[8:]
+	ret := gDataManager.moveFriendToGroup(client.uid, fuid, string(group))
 
+	retmsg := new(MsgRetUserToBlack)
+	retmsg.MsgId = MsgId_RetMoveFriendToGroup
+	retmsg.Result = uint16(ret)
+	retmsg.Fuid = fuid
+	client.send(Bytes(retmsg))
 }
 
 func OnReqSetFriendVerifyType(client *Client, data []byte) {
+	typ := data[0]
+	ret := gDataManager.setFriendVerifyType(client.uid, typ)
 
+	retmsg := new(MsgRetSetFriendVerifyType)
+	retmsg.MsgId = MsgId_RetSetFriendVerifyType
+	retmsg.Result = uint16(ret)
+	client.send(Bytes(retmsg))
 }

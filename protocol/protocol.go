@@ -88,6 +88,7 @@ type MsgReqFriendList struct {
 
 type MsgRetFriendList struct {
 	NullCmd
+	Result     uint16
 	GroupCount byte
 	Data       []byte
 }
@@ -133,7 +134,7 @@ type MsgReqUserToBlack struct {
 
 type MsgRetUserToBlack struct {
 	NullCmd
-	Result byte
+	Result uint16
 	Fuid   uint64
 }
 
@@ -145,7 +146,8 @@ type MsgReqMoveFriendToGroup struct {
 
 type MsgRetMoveFriendToGroup struct {
 	NullCmd
-	Result byte
+	Result uint16
+	Fuid   uint64
 }
 
 type MsgReqSetFriendVerifyType struct {
@@ -155,5 +157,5 @@ type MsgReqSetFriendVerifyType struct {
 
 type MsgRetSetFriendVerifyType struct {
 	NullCmd
-	Result byte
+	Result uint16
 }
