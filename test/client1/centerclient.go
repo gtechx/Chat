@@ -63,6 +63,9 @@ func (this *CenterClient) ParseMsg(data []byte) {
 	case MsgId_ReqLoginOut:
 	case MsgId_Echo:
 		fmt.Println("recv:" + String(data[2:]))
+	case MsgId_RetFriendList:
+		//
+		fmt.Println("MsgId_RetFriendList result:", Uint16(data[2:4]))
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}

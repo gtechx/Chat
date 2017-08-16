@@ -39,11 +39,14 @@ type Client struct {
 	uid          uint64
 	password     string
 	state        int
+	clientAddr   string
 }
 
 func (this *Client) Close() {
-	fmt.Println("client:" + this.conn.ConnAddr() + "closed")
+	fmt.Println("client:" + this.clientAddr + "closed")
 	if this.conn != nil {
+		this.conn.SetMsgParser(nil)
+		this.conn.SetListener(nil)
 		if this.isVerifyed {
 			gDataManager.setUserOffline(this.uid)
 			// n, err := RedisConn.Do("SREM", "user:online", String(this.uid))
@@ -61,11 +64,20 @@ func (this *Client) Close() {
 			// 	fmt.Println("sadd cmd failed!")
 			// }
 		}
-		removeClient(this.conn.ConnAddr())
+		removeClient(this.clientAddr)
 		this.conn.Close()
 		this.conn = nil
 		this.isVerifyed = false
 		this.state = state_none
+	}
+
+	this.closeTimer()
+}
+
+func (this *Client) closeTimer() {
+	if this.timer != nil {
+		this.timer.Reset(time.Millisecond * 1)
+		this.timer = nil
 	}
 }
 
@@ -92,16 +104,27 @@ func (this *Client) startTick() {
 			fmt.Println("countTimeOut++")
 			this.countTimeOut++
 			if this.countTimeOut >= 2 {
-				this.timer.Stop()
+				if this.timer != nil {
+					this.timer.Stop()
+				}
 				this.Close()
 				return
 			}
-			this.timer.Reset(time.Second * 60)
+			if this.timer != nil {
+				this.timer.Reset(time.Second * 60)
+			}
 		case <-this.tickChan:
 			this.countTimeOut = 0
-			this.timer.Reset(time.Second * 60)
+			if this.timer != nil {
+				this.timer.Reset(time.Second * 60)
+			}
+		}
+
+		if this.state == state_none {
+			break
 		}
 	}
+	fmt.Println("tick end")
 }
 
 func (this *Client) ParseHeader(data []byte) int {
@@ -114,13 +137,14 @@ func (this *Client) ParseHeader(data []byte) int {
 func (this *Client) ParseMsg(data []byte) {
 	//fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
 	msgid := Uint16(data)
+	fmt.Println("msgid:", msgid)
 	if this.isVerifyed {
 		this.tickChan <- 1
 	} else if msgid != MsgId_ReqLogin {
 		//if not logined, do not response to any msg
 		return
 	}
-	fmt.Println("msgid:", msgid)
+
 	switch msgid {
 	case MsgId_ReqLogin:
 		uid := Uint64(data[2:10])
@@ -141,6 +165,7 @@ func (this *Client) ParseMsg(data []byte) {
 				this.lock.Lock()
 				this.isVerifyed = true
 				this.tickChan = make(chan int, 2)
+				this.closeTimer()
 				go this.startTick()
 				this.lock.Unlock()
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
@@ -201,7 +226,8 @@ func (this *Client) OnPostSend([]byte, int) {
 }
 
 func (this *Client) OnClose() {
-	fmt.Println("tcpserver closed:", this.conn.ConnAddr())
+	//fmt.Println("tcpserver closed:", this.clientAddr)
+	this.Close()
 }
 
 func (this *Client) OnRecvBusy([]byte) {

@@ -6,6 +6,7 @@ import (
 	. "github.com/nature19862001/Chat/protocol"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
+	"strings"
 )
 
 var client *gtnet.Client
@@ -59,13 +60,25 @@ func startSend() {
 		fmt.Scanln(&str)
 		if str != "" {
 			//bytes := Bytes(int16(len(str)))
-			req := new(MsgEcho)
-			req.MsgId = MsgId_Echo
-			req.Data = []byte(str)
-			//fmt.Println(bytes)
-			//buff := Bytes(req)
-			send(Bytes(req))
+
 			//chatclient.Send(append(Bytes(int16(len(buff))), buff...))
+			strarr := strings.Split(str, ":")
+			cmd := strarr[0]
+			data := ""
+			if len(strarr) > 1 {
+				data = strarr[1]
+			}
+			switch cmd {
+			case "echo":
+				req := new(MsgEcho)
+				req.MsgId = MsgId_Echo
+				req.Data = []byte(data)
+				send(Bytes(req))
+			case "flist":
+				req := new(MsgReqFriendList)
+				req.MsgId = MsgId_ReqFriendList
+				send(Bytes(req))
+			}
 		}
 	}
 }

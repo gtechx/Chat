@@ -81,6 +81,7 @@ func redisOnBorrow(c redis.Conn, t time.Time) error {
 func (this *redisDataManager) checkLogin(uid uint64, password string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
+	fmt.Println("checklogin:", uid, password)
 	ret, err := conn.Do("HGET", uid, "password")
 
 	if err != nil {

@@ -18,7 +18,7 @@ func init() {
 }
 
 func newClient(conn gtnet.IConn) *Client {
-	c := &Client{conn: conn, lock: new(sync.Mutex), isVerifyed: false}
+	c := &Client{conn: conn, lock: new(sync.Mutex), isVerifyed: false, clientAddr: conn.ConnAddr()}
 	conn.SetMsgParser(c)
 	conn.SetListener(c)
 	go c.waitForLogin()
