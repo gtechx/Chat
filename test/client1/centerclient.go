@@ -46,7 +46,7 @@ func (this *CenterClient) send(buff []byte) {
 
 func (this *CenterClient) ParseMsg(data []byte) {
 	msgid := Uint16(data)
-
+	fmt.Println("msgid:", msgid)
 	switch msgid {
 	case MsgId_ReqRetLogin:
 		result := Uint16(data[2:4])
@@ -65,7 +65,7 @@ func (this *CenterClient) ParseMsg(data []byte) {
 		fmt.Println("recv:" + String(data[2:]))
 	case MsgId_RetFriendList:
 		//
-		fmt.Println("MsgId_RetFriendList result:", Uint16(data[2:4]))
+		fmt.Println("MsgId_RetFriendList result:", Uint16(data[2:4]), " groupcount:", data[4:5])
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}

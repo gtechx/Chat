@@ -156,6 +156,7 @@ func (this *Client) ParseMsg(data []byte) {
 			this.uid = uid
 			this.password = string(password)
 			ret.Result = uint16(ERR_NONE)
+			addUidMap(uid, this)
 			//copy(ret.IP[0:], []byte("127.0.0.1"))
 			//ret.Port = 9090
 			ok := gDataManager.setUserOnline(uid)

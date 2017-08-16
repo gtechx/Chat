@@ -15,17 +15,23 @@ var quit chan int
 
 var nettype string = "tcp"
 var addr string = "127.0.0.1:9090"
+var user uint64 = 10001
+var password string = "123456"
 
 func main() {
 	var err error
 
 	pnet := flag.String("net", nettype, "-net=")
 	paddr := flag.String("addr", addr, "-addr=")
+	puser := flag.Uint64("u", user, "-u=")
+	ppassword := flag.String("p", password, "-p=")
 
 	flag.Parse()
 
 	nettype = *pnet
 	addr = *paddr
+	user = *puser
+	password = *ppassword
 
 	quit = make(chan int, 1)
 	client = gtnet.NewClient(nettype, addr)
@@ -41,8 +47,8 @@ func main() {
 
 	req := new(MsgReqLogin)
 	req.MsgId = MsgId_ReqLogin
-	req.Uid = uint64(10001)
-	fmt.Println(Md5("123456"))
+	req.Uid = uint64(user)
+	fmt.Println(Md5(password))
 	copy(req.Password[0:], []byte(Md5("123456")))
 	send(Bytes(req))
 
@@ -77,6 +83,13 @@ func startSend() {
 			case "flist":
 				req := new(MsgReqFriendList)
 				req.MsgId = MsgId_ReqFriendList
+				send(Bytes(req))
+			case "fadd":
+				dataarr := strings.Split(data, "&")
+				req := new(MsgReqFriendAdd)
+				req.MsgId = MsgId_ReqFriendAdd
+				req.Fuid = Uint64(dataarr[0])
+				req.Group = []byte(dataarr[1])
 				send(Bytes(req))
 			}
 		}

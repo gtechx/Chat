@@ -187,7 +187,9 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 	if ret == nil {
 		return nil
 	} else {
-		return Bytes(ret)
+		retarr, _ := redis.Values(ret, nil)
+		//fmt.Println(err.Error())
+		return Bytes(retarr[1])
 	}
 }
 
@@ -386,7 +388,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	}
 
 	//check if fuid is exists
-	ret, err = conn.Do("HEXISTS", fuid)
+	ret, err = conn.Do("HEXISTS", "friend:"+String(uid), fuid)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())
@@ -810,6 +812,8 @@ func (this *redisDataManager) sendMsgToUser(uid uint64, data []byte) int {
 		return ERR_REDIS
 	}
 
+	data = append(Bytes(uid), data...)
+	//fmt.Println(data)
 	if ret != nil {
 		// if online
 		serveraddr := String(ret)

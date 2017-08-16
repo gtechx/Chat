@@ -1,8 +1,9 @@
 package main
 
 import (
-//. "github.com/nature19862001/Chat/common"
-//"github.com/nature19862001/base/gtnet"
+	"fmt"
+	. "github.com/nature19862001/base/common"
+	//"github.com/nature19862001/base/gtnet"
 )
 
 func messagePullInit() {
@@ -14,7 +15,9 @@ func startMessagePull() {
 		data := gDataManager.pullMsg(serverAddr, 15)
 
 		if data != nil {
-			//
+			//fmt.Println(data)
+			uid := Uint64(data[0:8])
+			sendMsgToUid(uid, data[8:])
 		}
 	}
 }
