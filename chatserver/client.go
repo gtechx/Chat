@@ -26,6 +26,7 @@ func init() {
 	msgProcesserMap[MsgId_ReqUserToBlack] = OnReqUserToBlack
 	msgProcesserMap[MsgId_ReqMoveFriendToGroup] = OnReqMoveFriendToGroup
 	msgProcesserMap[MsgId_ReqSetFriendVerifyType] = OnReqSetFriendVerifyType
+	msgProcesserMap[MsgId_Message] = OnMessage
 }
 
 type Client struct {

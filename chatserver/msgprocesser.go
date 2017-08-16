@@ -71,6 +71,7 @@ func OnReqFriendAdd(client *Client, data []byte) {
 		//send req success msg to client
 		retmsg := new(MsgFriendReqSuccess)
 		retmsg.MsgId = MsgId_FriendReqSuccess
+		retmsg.Fuid = fuid
 		client.send(Bytes(retmsg))
 	// case ERR_NONE:
 	// 	//send add success msg to client
@@ -144,5 +145,18 @@ func OnReqSetFriendVerifyType(client *Client, data []byte) {
 	retmsg := new(MsgRetSetFriendVerifyType)
 	retmsg.MsgId = MsgId_RetSetFriendVerifyType
 	retmsg.Result = uint16(ret)
+	client.send(Bytes(retmsg))
+}
+
+func OnMessage(client *Client, data []byte) {
+	fuid := Uint64(data)
+	msg := data[8:]
+
+	ret := gDataManager.sendMsgToUser(fuid, msg)
+
+	retmsg := new(MsgRetMessage)
+	retmsg.MsgId = MsgId_RetMessage
+	retmsg.Result = uint16(ret)
+	retmsg.Fuid = fuid
 	client.send(Bytes(retmsg))
 }

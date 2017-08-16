@@ -61,6 +61,16 @@ func sendMsgToUid(uid uint64, data []byte) {
 	}
 }
 
+func cleanOnlineUsers() {
+	lock.Lock()
+	defer lock.Unlock()
+
+	for uid, _ := range clientuidmap {
+		gDataManager.setUserOffline(uid)
+	}
+	fmt.Println("cleanOnlineUsers end")
+}
+
 func startClientOp() {
 	for {
 		select {

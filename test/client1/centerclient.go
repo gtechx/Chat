@@ -66,6 +66,21 @@ func (this *CenterClient) ParseMsg(data []byte) {
 	case MsgId_RetFriendList:
 		//
 		fmt.Println("MsgId_RetFriendList result:", Uint16(data[2:4]), " groupcount:", data[4:5])
+	case MsgId_RetFriendAdd:
+	case MsgId_FriendReqSuccess:
+		fmt.Println("friend add req sended successfully:", Uint64(data[2:]))
+	case MsgId_FriendReqAgree:
+		fmt.Println("friend had agreed your friend req:", Uint64(data[2:10]), string(data[10:]))
+	case MsgId_FriendReq:
+		req := new(MsgRetFriendAdd)
+		req.MsgId = MsgId_ReqFriendAdd
+		req.Fuid = Uint64(data[2:])
+		req.Group = []byte("aaa")
+		this.send(Bytes(req))
+	case MsgId_Message:
+		fmt.Println("msg from", data[2:10], string(data[10:]))
+	case MsgId_RetMessage:
+		fmt.Println("msg send result:", Uint16(data[2:4]), Uint64(data[4:]))
 	default:
 		fmt.Println("unknow msgid:", msgid)
 	}
@@ -85,6 +100,7 @@ func (this *CenterClient) OnPostSend([]byte, int) {
 
 func (this *CenterClient) OnClose() {
 	fmt.Println("tcpclient closed")
+	quit <- 1
 }
 
 func (this *CenterClient) OnRecvBusy(buff []byte) {

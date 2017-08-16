@@ -38,6 +38,9 @@ const (
 
 	MsgId_ReqSetFriendVerifyType
 	MsgId_RetSetFriendVerifyType
+
+	MsgId_Message
+	MsgId_RetMessage
 )
 
 type NullCmd struct {
@@ -126,6 +129,7 @@ type MsgFriendReqAgree struct {
 
 type MsgFriendReqSuccess struct {
 	NullCmd
+	Fuid uint64
 }
 
 type MsgReqFriendAddSuccess struct {
@@ -175,4 +179,16 @@ type MsgReqSetFriendVerifyType struct {
 type MsgRetSetFriendVerifyType struct {
 	NullCmd
 	Result uint16
+}
+
+type MsgMessage struct {
+	NullCmd
+	Fuid uint64
+	Data []byte
+}
+
+type MsgRetMessage struct {
+	NullCmd
+	Result uint16
+	Fuid   uint64
 }

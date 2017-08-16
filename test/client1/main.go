@@ -91,6 +91,13 @@ func startSend() {
 				req.Fuid = Uint64(dataarr[0])
 				req.Group = []byte(dataarr[1])
 				send(Bytes(req))
+			case "msg":
+				dataarr := strings.Split(data, "&")
+				req := new(MsgMessage)
+				req.MsgId = MsgId_Message
+				req.Fuid = Uint64(dataarr[0])
+				req.Data = []byte(dataarr[1])
+				send(Bytes(req))
 			}
 		}
 	}

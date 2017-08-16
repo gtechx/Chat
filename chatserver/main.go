@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
 	//. "github.com/nature19862001/Chat/common"
 	//"github.com/nature19862001/base/gtnet"
 )
 
 var gDataManager dataManager
-var quit chan int
+var quit chan os.Signal
 
 var nettype string = "tcp"
 var serverAddr string = "127.0.0.1:9090"
@@ -17,6 +19,8 @@ var redisAddr string = "192.168.93.16:6379"
 
 func main() {
 	//var err error
+	quit = make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, os.Kill)
 
 	pnet := flag.String("net", nettype, "-net=")
 	paddr := flag.String("addr", serverAddr, "-addr=")
@@ -30,7 +34,6 @@ func main() {
 	redisNet = *predisnet
 	redisAddr = *predisaddr
 
-	quit = make(chan int, 1)
 	gDataManager = new(redisDataManager)
 	gDataManager.initialize()
 
@@ -63,4 +66,5 @@ func main() {
 	messagePullInit()
 
 	<-quit
+	cleanOnlineUsers()
 }
