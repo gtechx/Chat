@@ -25,13 +25,16 @@ const (
 
 	MsgId_FriendReqAgree
 	MsgId_FriendReq
-	MsgId_FriendReqSuccess
+	MsgId_FriendReqResult
 
 	MsgId_ReqFriendDel
 	MsgId_RetFriendDel
 
 	MsgId_ReqUserToBlack
 	MsgId_RetUserToBlack
+
+	MsgId_ReqRemoveUserInBlack
+	MsgId_RetRemoveUserInBlack
 
 	MsgId_ReqMoveFriendToGroup
 	MsgId_RetMoveFriendToGroup
@@ -127,9 +130,10 @@ type MsgFriendReqAgree struct {
 	Group []byte
 }
 
-type MsgFriendReqSuccess struct {
+type MsgFriendReqResult struct {
 	NullCmd
-	Fuid uint64
+	Result uint16
+	Fuid   uint64
 }
 
 type MsgReqFriendAddSuccess struct {
@@ -149,11 +153,21 @@ type MsgRetFriendDel struct {
 
 type MsgReqUserToBlack struct {
 	NullCmd
+	Fuid uint64
+}
+
+type MsgRetUserToBlack struct {
+	NullCmd
 	Result uint16
 	Fuid   uint64
 }
 
-type MsgRetUserToBlack struct {
+type MsgReqRemoveUserInBlack struct {
+	NullCmd
+	Fuid uint64
+}
+
+type MsgRetRemoveUserInBlack struct {
 	NullCmd
 	Result uint16
 	Fuid   uint64

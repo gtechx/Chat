@@ -35,6 +35,7 @@ type dataManager interface {
 	isUserExist(uid uint64) bool
 	setUserState()
 	addUserToBlacklist(uid, uuid uint64) int
+	removeUserInBlacklist(uid, uuid uint64) int
 	isUserInBlacklist(uid, uuid uint64) bool
 
 	//friend op

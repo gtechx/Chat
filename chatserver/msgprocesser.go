@@ -37,8 +37,8 @@ func OnReqFriendList(client *Client, data []byte) {
 }
 
 func OnReqFriendAdd(client *Client, data []byte) {
-	fuid := Uint64(data)
-	group := data[8:]
+	fuid := Uint64(data[2:])
+	group := data[10:]
 	ret := gDataManager.addFriend(client.uid, fuid, string(group))
 
 	switch ret {
@@ -57,10 +57,13 @@ func OnReqFriendAdd(client *Client, data []byte) {
 	// 	reterr := NewErrorMsg(ERR_FRIEND_MAX, MsgId_ReqFriendAdd)
 	// 	client.send(Bytes(reterr))
 	case ERR_FRIEND_ADD_NEED_REQ:
-		req := new(MsgFriendReq)
-		req.MsgId = MsgId_FriendReq
-		req.Fuid = client.uid
-		gDataManager.sendMsgToUser(fuid, Bytes(req))
+		code := gDataManager.addFriendReq(client.uid, fuid, string(group))
+		if code == ERR_NONE {
+			req := new(MsgFriendReq)
+			req.MsgId = MsgId_FriendReq
+			req.Fuid = client.uid
+			gDataManager.sendMsgToUser(fuid, Bytes(req))
+		}
 
 		// if code != ERR_NONE {
 		// 	reterr := NewErrorMsg(ERR_REDIS, MsgId_ReqFriendAdd)
@@ -69,8 +72,9 @@ func OnReqFriendAdd(client *Client, data []byte) {
 		// }
 
 		//send req success msg to client
-		retmsg := new(MsgFriendReqSuccess)
-		retmsg.MsgId = MsgId_FriendReqSuccess
+		retmsg := new(MsgFriendReqResult)
+		retmsg.MsgId = MsgId_FriendReqResult
+		retmsg.Result = uint16(code)
 		retmsg.Fuid = fuid
 		client.send(Bytes(retmsg))
 	// case ERR_NONE:
@@ -83,7 +87,7 @@ func OnReqFriendAdd(client *Client, data []byte) {
 		retmsg.Result = uint16(ret)
 		retmsg.MsgId = MsgId_RetFriendAdd
 		retmsg.Fuid = fuid
-		retmsg.Group = data[8:]
+		retmsg.Group = group
 		client.send(Bytes(retmsg))
 
 		req := new(MsgFriendReqAgree)
@@ -105,7 +109,7 @@ func OnReqFriendAdd(client *Client, data []byte) {
 }
 
 func OnReqFriendDel(client *Client, data []byte) {
-	fuid := Uint64(data)
+	fuid := Uint64(data[2:])
 	ret := gDataManager.deleteFriend(client.uid, fuid)
 
 	retmsg := new(MsgRetFriendDel)
@@ -126,9 +130,20 @@ func OnReqUserToBlack(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqMoveFriendToGroup(client *Client, data []byte) {
+func OnReqRemoveUserInBlack(client *Client, data []byte) {
 	fuid := Uint64(data)
-	group := data[8:]
+	ret := gDataManager.removeUserInBlacklist(client.uid, fuid)
+
+	retmsg := new(MsgRetRemoveUserInBlack)
+	retmsg.MsgId = MsgId_RetRemoveUserInBlack
+	retmsg.Result = uint16(ret)
+	retmsg.Fuid = fuid
+	client.send(Bytes(retmsg))
+}
+
+func OnReqMoveFriendToGroup(client *Client, data []byte) {
+	fuid := Uint64(data[2:])
+	group := data[10:]
 	ret := gDataManager.moveFriendToGroup(client.uid, fuid, string(group))
 
 	retmsg := new(MsgRetUserToBlack)
@@ -139,7 +154,7 @@ func OnReqMoveFriendToGroup(client *Client, data []byte) {
 }
 
 func OnReqSetFriendVerifyType(client *Client, data []byte) {
-	typ := data[0]
+	typ := data[2]
 	ret := gDataManager.setFriendVerifyType(client.uid, typ)
 
 	retmsg := new(MsgRetSetFriendVerifyType)
@@ -149,10 +164,10 @@ func OnReqSetFriendVerifyType(client *Client, data []byte) {
 }
 
 func OnMessage(client *Client, data []byte) {
-	fuid := Uint64(data)
-	msg := data[8:]
+	fuid := Uint64(data[2:])
+	//msg := data[10:]
 
-	ret := gDataManager.sendMsgToUser(fuid, msg)
+	ret := gDataManager.sendMsgToUser(fuid, data)
 
 	retmsg := new(MsgRetMessage)
 	retmsg.MsgId = MsgId_RetMessage

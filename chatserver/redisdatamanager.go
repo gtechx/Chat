@@ -301,13 +301,31 @@ func (this *redisDataManager) addUserToBlacklist(uid, uuid uint64) int {
 	defer conn.Close()
 
 	conn.Send("MULTI")
-	conn.Send("HDEL", "friend:"+String(uid), uuid)
+	//conn.Send("HDEL", "friend:"+String(uid), uuid)
 	//conn.Send("HDEL", "fgroup:"+String(uid)+":"+group, fuid)
-	conn.Send("SADD", "black:"+String(uuid), uid)
+	conn.Send("SADD", "black:"+String(uid), uuid)
 	_, err := conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("addUserToBlacklist error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) removeUserInBlacklist(uid, uuid uint64) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	conn.Send("MULTI")
+	//conn.Send("HDEL", "friend:"+String(uid), uuid)
+	//conn.Send("HDEL", "fgroup:"+String(uid)+":"+group, fuid)
+	conn.Send("SREM", "black:"+String(uid), uuid)
+	_, err := conn.Do("EXEC")
+
+	if err != nil {
+		fmt.Println("removeUserInBlacklist error:", err.Error())
 		return ERR_REDIS
 	}
 
@@ -357,7 +375,20 @@ func (this *redisDataManager) addFriendReq(uid, fuid uint64, group string) int {
 	}
 
 	//check if group exists
-	_, err := conn.Do("HSET", "freq", String(uid)+":"+String(fuid), group)
+	ret, err := conn.Do("SISMEMBER", "fgroup:"+String(uid), group)
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if Bool(ret) != true {
+		//return ERR_FRIEND_GROUP_NOT_EXIST
+		group = defaultGroupName
+	}
+
+	//check if group exists
+	_, err = conn.Do("HSET", "freq", String(uid)+":"+String(fuid), group)
 
 	if err != nil {
 		fmt.Println("addFriendReq error:", err.Error())
@@ -435,6 +466,20 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		group = defaultGroupName
 	}
 
+	//get fuid's verify type
+	vtype := VERIFY_TYPE_NEED_AGREE
+	ret, err = conn.Do("HGET", fuid, "vtype")
+
+	if err != nil {
+		fmt.Println("addFriend error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if ret == nil {
+		vtype = Int(ret)
+	}
+
+	//check if this is a agree message
 	ret, err = conn.Do("HGET", "freq", String(fuid)+":"+String(uid))
 
 	if err != nil {
@@ -443,12 +488,20 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	}
 
 	if ret == nil {
-		//need friend request to fuid
-		return ERR_FRIEND_ADD_NEED_REQ
+		//if add friend actively, then check fuid's vtype
+		if vtype == VERIFY_TYPE_NEED_AGREE {
+			//need friend request to fuid
+			return ERR_FRIEND_ADD_NEED_REQ
+		}
+
+		if vtype == VERIFY_TYPE_REFUSE_ALL {
+			return ERR_FRIEND_ADD_REFUSE_ALL
+		}
 	}
 
 	fuidgroup := String(ret)
 
+	//get friend count of group
 	ret, err = conn.Do("HGET", "friend:group:"+String(uid), group)
 
 	if err != nil {
@@ -462,6 +515,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		groupuidcount = Int(ret)
 	}
 
+	//get friend's friend count of fuidgroup
 	ret, err = conn.Do("HGET", "friend:group:"+String(fuid), fuidgroup)
 
 	if err != nil {
@@ -805,7 +859,19 @@ func (this *redisDataManager) sendMsgToUser(uid uint64, data []byte) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("HGET", uid, "online")
+	//check if friend is exist
+	ret, err := conn.Do("EXISTS", uid)
+
+	if err != nil {
+		fmt.Println("sendMsgToUser error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if !Bool(ret) {
+		return ERR_USER_NOT_EXIST
+	}
+
+	ret, err = conn.Do("HGET", uid, "online")
 
 	if err != nil {
 		fmt.Println("sendMsgToUser error:", err.Error())

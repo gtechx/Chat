@@ -98,6 +98,28 @@ func startSend() {
 				req.Fuid = Uint64(dataarr[0])
 				req.Data = []byte(dataarr[1])
 				send(Bytes(req))
+			case "black":
+				req := new(MsgReqUserToBlack)
+				req.MsgId = MsgId_ReqUserToBlack
+				req.Fuid = Uint64(data)
+				send(Bytes(req))
+			case "rblack":
+				req := new(MsgReqRemoveUserInBlack)
+				req.MsgId = MsgId_ReqRemoveUserInBlack
+				req.Fuid = Uint64(data)
+				send(Bytes(req))
+			case "movef":
+				dataarr := strings.Split(data, "&")
+				req := new(MsgReqMoveFriendToGroup)
+				req.MsgId = MsgId_ReqMoveFriendToGroup
+				req.Fuid = Uint64(dataarr[0])
+				req.Group = []byte(dataarr[1])
+				send(Bytes(req))
+			case "setverify":
+				req := new(MsgReqSetFriendVerifyType)
+				req.MsgId = MsgId_ReqSetFriendVerifyType
+				req.Type = Byte(data)
+				send(Bytes(req))
 			}
 		}
 	}

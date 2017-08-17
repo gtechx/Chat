@@ -24,6 +24,7 @@ func init() {
 	msgProcesserMap[MsgId_ReqFriendAdd] = OnReqFriendAdd
 	msgProcesserMap[MsgId_ReqFriendDel] = OnReqFriendDel
 	msgProcesserMap[MsgId_ReqUserToBlack] = OnReqUserToBlack
+	msgProcesserMap[MsgId_ReqRemoveUserInBlack] = OnReqRemoveUserInBlack
 	msgProcesserMap[MsgId_ReqMoveFriendToGroup] = OnReqMoveFriendToGroup
 	msgProcesserMap[MsgId_ReqSetFriendVerifyType] = OnReqSetFriendVerifyType
 	msgProcesserMap[MsgId_Message] = OnMessage
@@ -130,7 +131,7 @@ func (this *Client) startTick() {
 
 func (this *Client) ParseHeader(data []byte) int {
 	size := Int(data)
-	fmt.Println("header size :", size)
+	//fmt.Println("header size :", size)
 	//p.conn.Send(data)
 	return size
 }
@@ -138,7 +139,7 @@ func (this *Client) ParseHeader(data []byte) int {
 func (this *Client) ParseMsg(data []byte) {
 	//fmt.Println("client:", this.conn.ConnAddr(), "say:", String(data))
 	msgid := Uint16(data)
-	fmt.Println("msgid:", msgid)
+	//fmt.Println("msgid:", msgid)
 	if this.isVerifyed {
 		this.tickChan <- 1
 	} else if msgid != MsgId_ReqLogin {
@@ -202,7 +203,7 @@ func (this *Client) ParseMsg(data []byte) {
 	default:
 		fn, ok := msgProcesserMap[msgid]
 		if ok {
-			fn(this, data[2:])
+			fn(this, data)
 		} else {
 			fmt.Println("unknown msgid:", msgid)
 		}
