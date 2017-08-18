@@ -218,6 +218,49 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 	}
 }
 
+//app op
+func (this *redisDataManager) createApp(uid, uint64, name, password, desc, iconurl string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "app", name)
+
+	if err != nil {
+		fmt.Println("createApp error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if Bool(ret) {
+		return ERR_APP_EXISTS
+	}
+
+	conn.Send("SADD", "app", name)
+	conn.Send("HMSET", "app:"+name, "password", password, "desc", desc, "iconurl", iconurl, "regdate", time.Now().Unix())
+
+	_, err = conn.Do("EXEC")
+
+	if err != nil {
+		fmt.Println("createApp error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) deleteApp(uid, uint64, name string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("REM", "app", name)
+
+	if err != nil {
+		fmt.Println("deleteApp error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
 //user op
 func (this *redisDataManager) addAdmin(uid, uuid uint64, privilege uint32) int {
 	conn := this.redisPool.Get()

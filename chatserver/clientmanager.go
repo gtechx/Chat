@@ -58,6 +58,8 @@ func sendMsgToUid(uid uint64, data []byte) {
 	fmt.Println("send msg to uid:", uid)
 	if ok {
 		client.send(data)
+	} else {
+		gDataManager.sendMsgToUser(uid, data)
 	}
 }
 

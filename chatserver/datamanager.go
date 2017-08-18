@@ -27,6 +27,10 @@ type dataManager interface {
 
 	pullMsg(addr string, timeout int) []byte
 
+	//app op
+	createApp(uid, uint64, name, password, desc, iconurl string) int
+	deleteApp(uid, uint64, name string) int
+
 	//user op
 	addAdmin(uid, uuid uint64, privilege uint32) int
 	removeAdmin(uid, uuid uint64) int

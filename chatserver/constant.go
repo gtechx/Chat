@@ -17,6 +17,9 @@ const (
 	//privilege
 	ERR_NO_PRIVILEGE
 
+	//app
+	ERR_APP_EXISTS
+
 	//user error
 	ERR_FRIEND = iota + 1200
 	ERR_FRIEND_GROUP_NOT_EXIST
