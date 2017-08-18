@@ -20,6 +20,8 @@ var defaultGroupName string = "我的好友"
 //friend:group:uid	hashes		group:(n)	groupname
 //black:uid			sets
 //freq				hashes		uid:fuid
+//user				sets
+//admin				hashes
 
 type redisDataManager struct {
 	redisPool *redis.Pool
@@ -35,15 +37,38 @@ func (this *redisDataManager) initialize() bool {
 
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	n, err := conn.Do("EXISTS", "UID")
+	ret, err := conn.Do("EXISTS", "UID")
 
 	if err != nil {
 		fmt.Println("redis server error:", err.Error())
 		return false
 	}
 
-	if !Bool(n) {
+	if !Bool(ret) {
 		_, err = conn.Do("SET", "UID", 10000)
+
+		if err != nil {
+			fmt.Println("redis server error:", err.Error())
+			return false
+		}
+	}
+
+	ret, err = conn.Do("HEXISTS", "admin", 0)
+
+	if err != nil {
+		fmt.Println("redis server error:", err.Error())
+		return false
+	}
+
+	if !Bool(ret) {
+		_, err = conn.Do("HSET", "admin", 0, 0xffffffff)
+
+		if err != nil {
+			fmt.Println("redis server error:", err.Error())
+			return false
+		}
+
+		_, err = conn.Do("HSET", 0, "password", Md5("ztgame@123"))
 
 		if err != nil {
 			fmt.Println("redis server error:", err.Error())
@@ -194,6 +219,106 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 }
 
 //user op
+func (this *redisDataManager) addAdmin(uid, uuid uint64, privilege uint32) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("HGET", "admin", uid)
+
+	if err != nil {
+		fmt.Println("addAdmin error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if ret == nil {
+		return ERR_NO_PRIVILEGE
+	}
+
+	uidprivilege := Uint32(ret)
+
+	if (uidprivilege & (1 << PRIVILEGE_ADD_ADMIN)) != 1 {
+		return ERR_NO_PRIVILEGE
+	}
+
+	_, err = conn.Do("HSET", "admin", uuid, privilege)
+
+	if err != nil {
+		fmt.Println("addAdmin error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) removeAdmin(uid, uuid uint64) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("HGET", "admin", uid)
+
+	if err != nil {
+		fmt.Println("removeAdmin error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if ret == nil {
+		return ERR_NO_PRIVILEGE
+	}
+
+	privilege := Uint32(ret)
+
+	if (privilege & (1 << PRIVILEGE_DEL_ADMIN)) != 1 {
+		return ERR_NO_PRIVILEGE
+	}
+
+	_, err = conn.Do("HDEL", "admin", uuid)
+
+	if err != nil {
+		fmt.Println("removeAdmin error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) getAdminList(uid uint64) ([]uint64, int) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("HGET", "admin", uid)
+	adminlist := []uint64{}
+
+	if err != nil {
+		fmt.Println("getAdminList error:", err.Error())
+		return adminlist, ERR_REDIS
+	}
+
+	if ret == nil {
+		return adminlist, ERR_NO_PRIVILEGE
+	}
+
+	privilege := Uint32(ret)
+
+	if (privilege & (1 << PRIVILEGE_GET_ADMIN)) != 1 {
+		return adminlist, ERR_NO_PRIVILEGE
+	}
+
+	ret, err = conn.Do("HKEYS", "admin")
+
+	if err != nil {
+		fmt.Println("getAdminList error:", err.Error())
+		return adminlist, ERR_REDIS
+	}
+
+	retarr, _ := redis.Values(ret, nil)
+
+	for _, uid := range retarr {
+		adminlist = append(adminlist, Uint64(uid))
+	}
+
+	return adminlist, ERR_NONE
+}
+
 func (this *redisDataManager) createUser(nickname, password, regip string) (bool, uint64) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
@@ -234,33 +359,131 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 	return true, uid
 }
 
+func (this *redisDataManager) getUserList(uid uint64) ([]uint64, int) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("HGET", "admin", uid)
+	userlist := []uint64{}
+
+	if err != nil {
+		fmt.Println("getUserList error:", err.Error())
+		return userlist, ERR_REDIS
+	}
+
+	if ret == nil {
+		return userlist, ERR_NO_PRIVILEGE
+	}
+
+	privilege := Uint32(ret)
+
+	if (privilege & (1 << PRIVILEGE_GET_USER)) != 1 {
+		return userlist, ERR_NO_PRIVILEGE
+	}
+
+	ret, err = conn.Do("SMEMBERS", "user")
+
+	if err != nil {
+		fmt.Println("getUserList error:", err.Error())
+		return userlist, ERR_REDIS
+	}
+
+	retarr, _ := redis.Values(ret, nil)
+
+	for _, uid := range retarr {
+		userlist = append(userlist, Uint64(uid))
+	}
+
+	return userlist, ERR_NONE
+}
+
 func (this *redisDataManager) setUserOnline(uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("HSET", uid, "online", serverAddr)
+	conn.Send("MULTI")
+	conn.Send("HSET", uid, "online", serverAddr)
+	conn.Send("SADD", "online", uid)
+
+	_, err := conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("setUserOnline error:", err.Error())
 		return false
 	}
 
-	if ret == nil {
-		return false
-	}
+	// ret, err := conn.Do("HSET", uid, "online", serverAddr)
+
+	// if err != nil {
+	// 	fmt.Println("setUserOnline error:", err.Error())
+	// 	return false
+	// }
+
+	// if ret == nil {
+	// 	return false
+	// }
 
 	return true
+}
+
+func (this *redisDataManager) getUserOnline(uid uint64) ([]uint64, int) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("HGET", "admin", uid)
+	userlist := []uint64{}
+
+	if err != nil {
+		fmt.Println("getUserOnline error:", err.Error())
+		return userlist, ERR_REDIS
+	}
+
+	if ret == nil {
+		return userlist, ERR_NO_PRIVILEGE
+	}
+
+	privilege := Uint32(ret)
+
+	if (privilege & (1 << PRIVILEGE_GET_ONLINE_USER)) != 1 {
+		return userlist, ERR_NO_PRIVILEGE
+	}
+
+	ret, err = conn.Do("SMEMBERS", "online")
+
+	if err != nil {
+		fmt.Println("getUserOnline error:", err.Error())
+		return userlist, ERR_REDIS
+	}
+
+	retarr, _ := redis.Values(ret, nil)
+
+	for _, uid := range retarr {
+		userlist = append(userlist, Uint64(uid))
+	}
+
+	return userlist, ERR_NONE
 }
 
 func (this *redisDataManager) setUserOffline(uid uint64) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("HDEL", uid, "online")
+	conn.Send("MULTI")
+	conn.Send("HDEL", uid, "online")
+	conn.Send("SREM", "online", uid)
+
+	_, err := conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("setUserOffline error:", err.Error())
+		//return false
 	}
+
+	// _, err := conn.Do("HDEL", uid, "online")
+
+	// if err != nil {
+	// 	fmt.Println("setUserOffline error:", err.Error())
+	// }
 }
 
 func (this *redisDataManager) isUserOnline(uid uint64) bool {

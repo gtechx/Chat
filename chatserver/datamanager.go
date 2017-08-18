@@ -1,17 +1,17 @@
 package main
 
 import (
-	. "github.com/nature19862001/base/common"
+//. "github.com/nature19862001/base/common"
 )
 
-var account map[uint64]string
+// var account map[uint64]string
 
-func init() {
-	account = make(map[uint64]string)
-	for i := 1000; i < 10000; i++ {
-		account[uint64(i)] = Md5("1")
-	}
-}
+// func init() {
+// 	account = make(map[uint64]string)
+// 	for i := 1000; i < 10000; i++ {
+// 		account[uint64(i)] = Md5("1")
+// 	}
+// }
 
 type dataManager interface {
 	initialize() bool
@@ -28,9 +28,17 @@ type dataManager interface {
 	pullMsg(addr string, timeout int) []byte
 
 	//user op
+	addAdmin(uid, uuid uint64, privilege uint32) int
+	removeAdmin(uid, uuid uint64) int
+
+	getAdminList(uid uint64) ([]uint64, int)
+	getUserOnline(uid uint64) ([]uint64, int)
+	getUserList(uid uint64) ([]uint64, int)
+
 	createUser(nickname, password, regip string) (bool, uint64)
 	setUserOnline(uid uint64) bool
 	setUserOffline(uid uint64)
+
 	isUserOnline(uid uint64) bool
 	isUserExist(uid uint64) bool
 	setUserState()
