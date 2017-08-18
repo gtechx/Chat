@@ -207,14 +207,25 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 
 	uid := Uint64(ret)
 
-	ret, err = conn.Do("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix(), "maxfriends", 1000, "headurl", "", "desc", "")
+	// ret, err = conn.Do("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix(), "maxfriends", 1000, "headurl", "", "desc", "")
 
-	if err != nil {
-		fmt.Println("createUser error:", err.Error())
-		return false, 0
-	}
+	// if err != nil {
+	// 	fmt.Println("createUser error:", err.Error())
+	// 	return false, 0
+	// }
 
-	ret, err = conn.Do("SADD", "fgroup:"+String(uid), defaultGroupName)
+	// ret, err = conn.Do("SADD", "fgroup:"+String(uid), defaultGroupName)
+
+	// if err != nil {
+	// 	fmt.Println("createUser error:", err.Error())
+	// }
+
+	conn.Send("MULTI")
+	conn.Send("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix(), "maxfriends", 1000, "headurl", "", "desc", "")
+	conn.Send("SADD", "fgroup:"+String(uid), defaultGroupName)
+	conn.Send("SADD", "user", uid)
+
+	_, err = conn.Do("EXEC")
 
 	if err != nil {
 		fmt.Println("createUser error:", err.Error())
@@ -466,7 +477,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		group = defaultGroupName
 	}
 
-	//get fuid's verify type
+	//get fuid's verify type, default is VERIFY_TYPE_NEED_AGREE
 	vtype := VERIFY_TYPE_NEED_AGREE
 	ret, err = conn.Do("HGET", fuid, "vtype")
 
@@ -475,7 +486,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 		return ERR_REDIS
 	}
 
-	if ret == nil {
+	if ret != nil {
 		vtype = Int(ret)
 	}
 
