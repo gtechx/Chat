@@ -14,6 +14,7 @@ const (
 	state_connected int = 1
 	state_logined   int = 2
 	state_logouted  int = 3
+	state_del       int = 3
 )
 
 var msgProcesserMap map[uint16]func(*Client, []byte)
@@ -66,11 +67,13 @@ func (this *Client) Close() {
 			// 	fmt.Println("sadd cmd failed!")
 			// }
 		}
-		removeClient(this.clientAddr)
+
 		this.conn.Close()
 		this.conn = nil
 		this.isVerifyed = false
-		this.state = state_none
+		this.state = state_del
+		removeUidMap(this.uid)
+		removeClient(this.clientAddr)
 	}
 
 	this.closeTimer()
@@ -149,6 +152,10 @@ func (this *Client) ParseMsg(data []byte) {
 
 	switch msgid {
 	case MsgId_ReqLogin:
+		if this.isVerifyed {
+			//if had logined, do nothing
+			return
+		}
 		uid := Uint64(data[2:10])
 		password := data[10:]
 		ret := new(MsgRetLogin)
@@ -183,7 +190,29 @@ func (this *Client) ParseMsg(data []byte) {
 				this.Close()
 			}
 		}
-		ret.MsgId = MsgId_ReqRetLogin
+		ret.MsgId = MsgId_RetLogin
+		this.send(Bytes(ret))
+	case MsgId_ReqAppLogin:
+		uid := Uint64(data[2:10])
+		password := string(data[10:42])
+		appname := string(data[42:])
+		//check app login
+		//if login ok, then wait for app server verify
+		code := gDataManager.checkAppLogin(uid, password, appname)
+		ret := new(MsgRetAppLogin)
+		ret.MsgId = MsgId_RetAppLogin
+		if code == ERR_NONE {
+		} else {
+			//else ret login failed.
+			ret.Result = uint16(code)
+			this.verfiycount++
+
+			if this.verfiycount < 5 {
+				this.timer.Reset(time.Second * 30)
+			} else {
+				this.Close()
+			}
+		}
 		this.send(Bytes(ret))
 	case MsgId_Tick:
 		ret := new(MsgTick)

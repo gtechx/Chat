@@ -28,7 +28,7 @@ type dataManager interface {
 	pullMsg(addr string, timeout int) []byte
 
 	//app op
-	createApp(uid, uint64, name, password, desc, iconurl string) int
+	createApp(uid, uint64, name, desc, iconurl string) int
 	deleteApp(uid, uint64, name string) int
 
 	//user op
@@ -36,8 +36,8 @@ type dataManager interface {
 	removeAdmin(uid, uuid uint64) int
 
 	getAdminList(uid uint64) ([]uint64, int)
-	getUserOnline(uid uint64) ([]uint64, int)
 	getUserList(uid uint64) ([]uint64, int)
+	getUserOnline(uid uint64) ([]uint64, int)
 
 	createUser(nickname, password, regip string) (bool, uint64)
 	setUserOnline(uid uint64) bool
@@ -90,4 +90,7 @@ type dataManager interface {
 	getRoomVerify()
 	setRoomVerifyType()
 	getRoomVerifyType()
+
+	//app
+	checkAppLogin(uid uint64, password, appname string) int
 }

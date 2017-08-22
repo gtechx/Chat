@@ -48,7 +48,7 @@ func (this *CenterClient) ParseMsg(data []byte) {
 	msgid := Uint16(data)
 	//fmt.Println("msgid:", msgid)
 	switch msgid {
-	case MsgId_ReqRetLogin:
+	case MsgId_RetLogin:
 		result := Uint16(data[2:4])
 
 		if result == 0 {

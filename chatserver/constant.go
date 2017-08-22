@@ -18,7 +18,8 @@ const (
 	ERR_NO_PRIVILEGE
 
 	//app
-	ERR_APP_EXISTS
+	ERR_APP_EXIST
+	ERR_APP_NOT_EXIST
 
 	//user error
 	ERR_FRIEND = iota + 1200

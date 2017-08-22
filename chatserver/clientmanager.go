@@ -43,7 +43,12 @@ func addUidMap(uid uint64, client *Client) {
 func removeUidMap(uid uint64) {
 	lock.Lock()
 	defer lock.Unlock()
-	delete(clientuidmap, uid)
+
+	client, ok := clientuidmap[uid]
+	//if the same client close and login quickly and if with the same addr, we should check state to avoid delete a new client connect.
+	if ok && client.state == state_del {
+		delete(clientuidmap, uid)
+	}
 }
 
 func removeClient(addr string) {
@@ -80,7 +85,11 @@ func startClientOp() {
 			addr := newclient.conn.ConnAddr()
 			clientaddrmap[addr] = newclient
 		case deladdr := <-clientdelchan:
-			delete(clientaddrmap, deladdr)
+			client, ok := clientaddrmap[deladdr]
+			//if the same client close and login quickly and if with the same addr, we should check state to avoid delete a new client connect.
+			if ok && client.state == state_del {
+				delete(clientaddrmap, deladdr)
+			}
 		}
 
 		clientcount := len(clientaddrmap)

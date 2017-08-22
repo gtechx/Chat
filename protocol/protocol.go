@@ -12,7 +12,10 @@ const (
 	MsgId_Echo
 
 	MsgId_ReqLogin
-	MsgId_ReqRetLogin
+	MsgId_RetLogin
+
+	MsgId_ReqAppLogin
+	MsgId_RetAppLogin
 
 	MsgId_ReqLoginOut
 	MsgId_ReqRetLoginOut
@@ -82,6 +85,21 @@ type MsgReqLogin struct {
 type MsgRetLogin struct {
 	NullCmd
 	Result uint16
+	//IP     [16]byte
+	//Port   uint16
+}
+
+type MsgReqAppLogin struct {
+	NullCmd
+	Uid      uint64
+	Password [32]byte
+	Appname  [32]byte
+}
+
+type MsgRetAppLogin struct {
+	NullCmd
+	Result uint16
+	Uuid   [64]byte
 	//IP     [16]byte
 	//Port   uint16
 }
