@@ -93,4 +93,6 @@ type dataManager interface {
 
 	//app
 	checkAppLogin(uid uint64, password, appname string) int
+	setAppVerifyData(uuid string, uid uint64) int
+	verifyAppLoginData(uuid string, uid uint64) bool
 }

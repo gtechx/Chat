@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//. "github.com/nature19862001/Chat/common"
 	//"github.com/nature19862001/base/gtnet"
+	"encoding/json"
 	. "github.com/nature19862001/base/common"
 	"io"
 	"net/http"
@@ -35,7 +36,34 @@ func getServerList(rw http.ResponseWriter, req *http.Request) {
 func starUserRegister() {
 	http.HandleFunc("/register", register)
 	http.HandleFunc("/create", create)
+	http.HandleFunc("/loginverify", loginVerify)
 	http.ListenAndServe(":8080", nil)
+}
+
+type Error struct {
+	ErrorMsg  string `json:"error"`
+	ErrorCode int    `json:"errorcode"`
+}
+
+func loginVerify(rw http.ResponseWriter, req *http.Request) {
+	uuid := req.PostFormValue("uuid")
+	uid := Uint64(req.PostFormValue("uid"))
+
+	errmsg := new(Error)
+	if gDataManager.verifyAppLoginData(uuid, uid) {
+		if verifyAppLogin(uid) {
+			errmsg.ErrorCode = 0
+		} else {
+			errmsg.ErrorCode = 2
+			errmsg.ErrorMsg = "uid not logined"
+		}
+	} else {
+		errmsg.ErrorCode = 1
+		errmsg.ErrorMsg = "uuid is not exist or uid is not right"
+	}
+
+	data, _ := json.Marshal(&errmsg)
+	io.WriteString(rw, string(data))
 }
 
 func writeHeader(rw http.ResponseWriter) {

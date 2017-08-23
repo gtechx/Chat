@@ -78,6 +78,18 @@ func cleanOnlineUsers() {
 	fmt.Println("cleanOnlineUsers end")
 }
 
+func verifyAppLogin(uid uint64) bool {
+	lock.Lock()
+	defer lock.Unlock()
+
+	client, ok := clientuidmap[uid]
+	if ok {
+		return client.verifyAppLogin()
+	} else {
+		return false
+	}
+}
+
 func startClientOp() {
 	for {
 		select {

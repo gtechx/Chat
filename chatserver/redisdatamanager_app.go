@@ -41,3 +41,33 @@ func (this *redisDataManager) checkAppLogin(uid uint64, password, appname string
 
 	return ERR_NONE
 }
+
+func (this *redisDataManager) setAppVerifyData(uuid string, uid uint64) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	_, err := conn.Do("SET", uuid, uid, "EX", 30)
+
+	if err != nil {
+		fmt.Println("setAppVerifyData error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) verifyAppLoginData(uuid string, uid uint64) bool {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	ret, err := conn.Do("GET", uuid)
+
+	if err != nil {
+		fmt.Println("setAppVerifyData error:", err.Error())
+		return false
+	}
+
+	if ret == nil {
+		return false
+	}
+
+	return Uint64(ret) == uid
+}
