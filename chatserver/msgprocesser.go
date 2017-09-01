@@ -5,7 +5,7 @@ import (
 	. "github.com/nature19862001/base/common"
 )
 
-func OnReqFriendList(client *Client, data []byte) {
+func OnReqFriendList(client *ChatClient, data []byte) {
 	flist, ret := gDataManager.getFriendList(client.uid)
 
 	// if err != nil {
@@ -36,7 +36,7 @@ func OnReqFriendList(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqFriendAdd(client *Client, data []byte) {
+func OnReqFriendAdd(client *ChatClient, data []byte) {
 	fuid := Uint64(data[2:])
 	group := data[10:]
 	ret := gDataManager.addFriend(client.uid, fuid, string(group))
@@ -108,7 +108,7 @@ func OnReqFriendAdd(client *Client, data []byte) {
 	}
 }
 
-func OnReqFriendDel(client *Client, data []byte) {
+func OnReqFriendDel(client *ChatClient, data []byte) {
 	fuid := Uint64(data[2:])
 	ret := gDataManager.deleteFriend(client.uid, fuid)
 
@@ -119,7 +119,7 @@ func OnReqFriendDel(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqUserToBlack(client *Client, data []byte) {
+func OnReqUserToBlack(client *ChatClient, data []byte) {
 	fuid := Uint64(data)
 	ret := gDataManager.addUserToBlacklist(client.uid, fuid)
 
@@ -130,7 +130,7 @@ func OnReqUserToBlack(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqRemoveUserInBlack(client *Client, data []byte) {
+func OnReqRemoveUserInBlack(client *ChatClient, data []byte) {
 	fuid := Uint64(data)
 	ret := gDataManager.removeUserInBlacklist(client.uid, fuid)
 
@@ -141,7 +141,7 @@ func OnReqRemoveUserInBlack(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqMoveFriendToGroup(client *Client, data []byte) {
+func OnReqMoveFriendToGroup(client *ChatClient, data []byte) {
 	fuid := Uint64(data[2:])
 	group := data[10:]
 	ret := gDataManager.moveFriendToGroup(client.uid, fuid, string(group))
@@ -153,7 +153,7 @@ func OnReqMoveFriendToGroup(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnReqSetFriendVerifyType(client *Client, data []byte) {
+func OnReqSetFriendVerifyType(client *ChatClient, data []byte) {
 	typ := data[2]
 	ret := gDataManager.setFriendVerifyType(client.uid, typ)
 
@@ -163,7 +163,7 @@ func OnReqSetFriendVerifyType(client *Client, data []byte) {
 	client.send(Bytes(retmsg))
 }
 
-func OnMessage(client *Client, data []byte) {
+func OnMessage(client *ChatClient, data []byte) {
 	fuid := Uint64(data[2:])
 	//msg := data[10:]
 

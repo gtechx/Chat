@@ -27,10 +27,6 @@ type dataManager interface {
 
 	pullMsg(addr string, timeout int) []byte
 
-	//app op
-	createApp(uid, uint64, name, desc, iconurl string) int
-	deleteApp(uid, uint64, name string) int
-
 	//user op
 	addAdmin(uid, uuid uint64, privilege uint32) int
 	removeAdmin(uid, uuid uint64) int
@@ -91,8 +87,14 @@ type dataManager interface {
 	setRoomVerifyType()
 	getRoomVerifyType()
 
+	//app op
+	createApp(uid, uint64, name, password, desc, iconurl string) int
+	deleteApp(uid, uint64, name string) int
+	setAppOnline(appname string) int
+	setAppOffline(appname string) int
+
 	//app
-	checkAppLogin(uid uint64, password, appname string) int
+	checkAppLogin(appname, password string) int
 	setAppVerifyData(uuid string, uid uint64) int
 	verifyAppLoginData(uuid string, uid uint64) bool
 }

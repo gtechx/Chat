@@ -91,16 +91,15 @@ type MsgRetLogin struct {
 
 type MsgReqAppLogin struct {
 	NullCmd
-	Uid      uint64
-	Password [32]byte
 	Appname  [32]byte
+	Password [32]byte
 }
 
 type MsgRetAppLogin struct {
 	NullCmd
 	Result uint16
 	Count  byte
-	Uuid   []byte
+	Token  []byte
 	//IP     [16]byte
 	//Port   uint16
 }

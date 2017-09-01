@@ -6,38 +6,103 @@ import (
 	//"github.com/garyburd/redigo/redis"
 	. "github.com/nature19862001/base/common"
 	//"strings"
-	//"time"
+	"time"
 )
 
-func (this *redisDataManager) checkAppLogin(uid uint64, password, appname string) int {
+//app op
+func (this *redisDataManager) createApp(uid, uint64, name, password, desc, iconurl string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	fmt.Println("checkAppLogin:", uid, password, appname)
-	ret, err := conn.Do("HGET", uid, "password")
+
+	ret, err := conn.Do("SISMEMBER", "app", name)
 
 	if err != nil {
-		fmt.Println("checkAppLogin error:", err.Error())
+		fmt.Println("createApp error:", err.Error())
 		return ERR_REDIS
 	}
 
-	if ret == nil {
-		return ERR_USER_NOT_EXIST
+	if Bool(ret) {
+		return ERR_APP_EXIST
 	}
 
-	if String(ret) != password {
-		return ERR_PASSWORD_INVALID
-	}
+	conn.Send("SADD", "app", name)
+	conn.Send("HMSET", "app:"+name, "password", password, "desc", desc, "iconurl", iconurl, "regdate", time.Now().Unix(), "maxfriends", 1000)
 
-	ret, err = conn.Do("SISMEMBER", "app", appname)
+	_, err = conn.Do("EXEC")
 
 	if err != nil {
-		fmt.Println("checkAppLogin error:", err.Error())
+		fmt.Println("createApp error:", err.Error())
 		return ERR_REDIS
 	}
 
-	if ret == nil {
+	return ERR_NONE
+}
+
+func (this *redisDataManager) deleteApp(uid, uint64, name string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "app", name)
+
+	if err != nil {
+		fmt.Println("deleteApp error:", err.Error())
+		return ERR_REDIS
+	}
+
+	if !Bool(ret) {
 		return ERR_APP_NOT_EXIST
 	}
+
+	conn.Send("SREM", "app", name)
+	conn.Send("DEL", "app:"+name)
+
+	_, err = conn.Do("EXEC")
+
+	if err != nil {
+		fmt.Println("deleteApp error:", err.Error())
+		return ERR_REDIS
+	}
+
+	return ERR_NONE
+}
+
+func (this *redisDataManager) setAppOnline(addr string) int {
+	return ERR_NONE
+}
+
+func (this *redisDataManager) setAppOffline(appname string) int {
+	return ERR_NONE
+}
+
+func (this *redisDataManager) checkAppLogin(appname, password string) int {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	fmt.Println("checkAppLogin:", password, appname)
+	// ret, err := conn.Do("HGET", uid, "password")
+
+	// if err != nil {
+	// 	fmt.Println("checkAppLogin error:", err.Error())
+	// 	return ERR_REDIS
+	// }
+
+	// if ret == nil {
+	// 	return ERR_USER_NOT_EXIST
+	// }
+
+	// if String(ret) != password {
+	// 	return ERR_PASSWORD_INVALID
+	// }
+
+	// ret, err = conn.Do("SISMEMBER", "app", appname)
+
+	// if err != nil {
+	// 	fmt.Println("checkAppLogin error:", err.Error())
+	// 	return ERR_REDIS
+	// }
+
+	// if ret == nil {
+	// 	return ERR_APP_NOT_EXIST
+	// }
 
 	return ERR_NONE
 }

@@ -16,12 +16,12 @@ var defaultGroupName string = "我的好友"
 //key										field		field	...
 //uid							hashes		nickname	password
 //uid:app						sets //用户所使用过的app
-//uid:appname					hashes //用户每个app对应的资料,vtype, maxfriends, desc, firstlogindate, firstloginip, lastlogindate, lastloginip, headurl
-//fgroup:uid:[appname]			sets
-//friend:uid:[appname]			hashes		fuid
-//friend:group:uid:[appname]	hashes		group:(n)	groupname
-//black:uid:[appname]			sets
-//freq:[appname]				hashes		uid:fuid
+//app:roleid				hashes //用户每个app对应的资料,vtype, maxfriends, desc, firstlogindate, firstloginip, lastlogindate, lastloginip, headurl
+//[app:]fgroup:uid			sets
+//[app:]friend:uid			hashes		fuid
+//[app:]friend:group:uid	hashes		group:(n)	groupname
+//[app:]black:uid			sets
+//[app:]freq				hashes		uid:fuid
 //user				sets
 //admin				hashes
 //app				sets
@@ -221,63 +221,6 @@ func (this *redisDataManager) pullMsg(addr string, timeout int) []byte {
 		//fmt.Println(err.Error())
 		return Bytes(retarr[1])
 	}
-}
-
-//app op
-func (this *redisDataManager) createApp(uid, uint64, name, desc, iconurl string) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	ret, err := conn.Do("SISMEMBER", "app", name)
-
-	if err != nil {
-		fmt.Println("createApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	if Bool(ret) {
-		return ERR_APP_EXIST
-	}
-
-	conn.Send("SADD", "app", name)
-	conn.Send("HMSET", "app:"+name, "desc", desc, "iconurl", iconurl, "regdate", time.Now().Unix(), "maxfriends", 1000)
-
-	_, err = conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("createApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
-}
-
-func (this *redisDataManager) deleteApp(uid, uint64, name string) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	ret, err := conn.Do("SISMEMBER", "app", name)
-
-	if err != nil {
-		fmt.Println("deleteApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	if !Bool(ret) {
-		return ERR_APP_NOT_EXIST
-	}
-
-	conn.Send("SREM", "app", name)
-	conn.Send("DEL", "app:"+name)
-
-	_, err = conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("deleteApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
 }
 
 //user op
