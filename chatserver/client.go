@@ -20,13 +20,13 @@ func newClient(conn gtnet.IConn) *Client {
 	return c
 }
 
-func (this *Client) Close() {
-	fmt.Println("client:" + this.conn.ConnAddr() + " closed")
+func (this *Client) close() {
+	//fmt.Println("client:" + this.conn.ConnAddr() + " closed")
 	if this.conn != nil {
-		this.conn.SetMsgParser(nil)
-		this.conn.SetListener(nil)
+		//this.conn.SetMsgParser(nil)
+		//this.conn.SetListener(nil)
 
-		this.conn.Close()
+		//this.conn.Close()
 		this.conn = nil
 	}
 }
@@ -44,11 +44,11 @@ func (this *Client) startProcess() {
 
 	select {
 	case <-timer.C:
-		this.Close()
 	case data := <-this.recvChan:
 		this.process(data)
 	}
-	close(this.recvChan)
+
+	this.close()
 }
 
 func (this *Client) process(data []byte) {
@@ -58,9 +58,10 @@ func (this *Client) process(data []byte) {
 	case MsgId_ReqLogin:
 		uid := Uint64(data[2:10])
 		password := data[10:]
+		code := gDataManager.checkLogin(uid, string(password))
 		ret := new(MsgRetLogin)
 		ret.MsgId = MsgId_RetLogin
-		code := gDataManager.checkLogin(uid, string(password))
+		ret.Result = uint16(code)
 		if code == ERR_NONE {
 			ret.Result = uint16(ERR_NONE)
 			//copy(ret.IP[0:], []byte("127.0.0.1"))
@@ -68,16 +69,10 @@ func (this *Client) process(data []byte) {
 			ok := gDataManager.setUserOnline(uid)
 			if !ok {
 				ret.Result = uint16(ERR_REDIS)
-				this.send(Bytes(ret))
-				this.Close()
-				return
 			} else {
+				newChatClient(uid, this.conn)
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
-		} else {
-			ret.Result = uint16(code)
-			this.send(Bytes(ret))
-			this.Close()
 		}
 		this.send(Bytes(ret))
 	case MsgId_ReqAppLogin:
@@ -92,13 +87,9 @@ func (this *Client) process(data []byte) {
 		if code == ERR_NONE {
 			//copy(ret.IP[0:], []byte("127.0.0.1"))
 			//ret.Port = 9090
-			code := gDataManager.setAppOnline(appname)
+			code = gDataManager.setAppOnline(appname)
 			ret.Result = uint16(code)
-			if code != ERR_NONE {
-				this.send(Bytes(ret))
-				this.Close()
-				return
-			} else {
+			if code == ERR_NONE {
 				token := Authcode(String(time.Now().Unix())+":"+appname, "ENCODE")
 
 				ret.Count = byte(len(token))
@@ -107,13 +98,13 @@ func (this *Client) process(data []byte) {
 				newAppClient(appname, this.conn)
 				fmt.Println("addr:" + this.conn.ConnAddr() + " app logined success")
 			}
-		} else {
-			//else ret login failed.
-			this.send(Bytes(ret))
-			this.Close()
 		}
 		this.send(Bytes(ret))
 	}
+}
+
+func (this *Client) send(buff []byte) {
+	this.conn.Send(append(Bytes(int16(len(buff))), buff...))
 }
 
 func (this *Client) ParseHeader(data []byte) int {
@@ -127,10 +118,6 @@ func (this *Client) ParseMsg(data []byte) {
 	newdata := make([]byte, len(data))
 	copy(newdata, data)
 	this.recvChan <- newdata
-}
-
-func (this *Client) send(buff []byte) {
-	this.conn.Send(append(Bytes(int16(len(buff))), buff...))
 }
 
 func (this *Client) OnError(errorcode int, msg string) {
@@ -149,7 +136,7 @@ func (this *Client) OnPostSend([]byte, int) {
 
 func (this *Client) OnClose() {
 	//fmt.Println("tcpserver closed:", this.clientAddr)
-	this.Close()
+	//this.Close()
 }
 
 func (this *Client) OnRecvBusy([]byte) {

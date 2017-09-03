@@ -33,6 +33,7 @@ func newChatClient(uid uint64, conn gtnet.IConn) *ChatClient {
 	chatClientMap[uid] = c
 
 	c.serve()
+	fmt.Println("new chat client:", uid)
 	return c
 }
 
@@ -41,6 +42,7 @@ func removeChatClient(uid uint64) {
 	defer chatlock.Unlock()
 
 	delete(chatClientMap, uid)
+	fmt.Println("delete chat client:", uid)
 }
 
 func sendMsgToUid(uid uint64, data []byte) {

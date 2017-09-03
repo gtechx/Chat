@@ -59,7 +59,7 @@ func (this *CenterClient) ParseMsg(data []byte) {
 			fmt.Println("login to server center failed! errcode:", result)
 		}
 	case MsgId_Tick:
-		//fmt.Println("recv tick rom server")
+		//fmt.Println("recv tick from server")
 	case MsgId_ReqLoginOut:
 	case MsgId_Echo:
 		fmt.Println("recv:" + String(data[2:]))

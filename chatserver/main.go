@@ -49,7 +49,7 @@ func main() {
 	loadBanlanceInit()
 
 	//init chat server
-	ok = chatServerInit(nettype, serverAddr)
+	ok = chatServerStart(nettype, serverAddr)
 
 	if !ok {
 		fmt.Println("chat server init failed!!!")
@@ -66,5 +66,7 @@ func main() {
 	messagePullInit()
 
 	<-quit
+
+	chatServerStop()
 	cleanOnlineUsers()
 }

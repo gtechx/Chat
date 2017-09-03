@@ -26,6 +26,7 @@ type AppClient struct {
 	conn     gtnet.IConn
 	appName  string
 	recvChan chan []byte
+	quitChan chan int
 }
 
 func (this *AppClient) Close() {
@@ -37,13 +38,13 @@ func (this *AppClient) Close() {
 
 		this.conn.Close()
 		this.conn = nil
-		close(this.recvChan)
 		removeAppClient(this.appName)
 	}
 }
 
 func (this *AppClient) serve() {
 	this.recvChan = make(chan []byte, 2)
+	this.quitChan = make(chan int, 1)
 	this.conn.SetMsgParser(this)
 	this.conn.SetListener(this)
 
@@ -56,6 +57,8 @@ func (this *AppClient) startProcess() {
 
 	for {
 		select {
+		case <-this.quitChan:
+			goto end
 		case <-timer.C:
 			fmt.Println("countTimeOut++")
 			countTimeOut++
@@ -78,7 +81,7 @@ func (this *AppClient) startProcess() {
 end:
 	timer.Stop()
 	this.Close()
-	fmt.Println("tick end")
+	fmt.Println("app process end")
 }
 
 func (this *AppClient) process(data []byte) bool {
@@ -112,6 +115,10 @@ func (this *AppClient) process(data []byte) bool {
 	return false
 }
 
+func (this *AppClient) send(buff []byte) {
+	this.conn.Send(append(Bytes(int16(len(buff))), buff...))
+}
+
 func (this *AppClient) ParseHeader(data []byte) int {
 	size := Int(data)
 	//fmt.Println("header size :", size)
@@ -123,10 +130,6 @@ func (this *AppClient) ParseMsg(data []byte) {
 	newdata := make([]byte, len(data))
 	copy(newdata, data)
 	this.recvChan <- newdata
-}
-
-func (this *AppClient) send(buff []byte) {
-	this.conn.Send(append(Bytes(int16(len(buff))), buff...))
 }
 
 func (this *AppClient) OnError(errorcode int, msg string) {
@@ -145,7 +148,7 @@ func (this *AppClient) OnPostSend([]byte, int) {
 
 func (this *AppClient) OnClose() {
 	//fmt.Println("tcpserver closed:", this.AppClientAddr)
-	this.Close()
+	this.quitChan <- 1
 }
 
 func (this *AppClient) OnRecvBusy([]byte) {

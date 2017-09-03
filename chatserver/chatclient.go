@@ -37,6 +37,7 @@ type ChatClient struct {
 	//ChatClientAddr string
 
 	recvChan chan []byte
+	quitChan chan int
 }
 
 func (this *ChatClient) Close() {
@@ -48,7 +49,7 @@ func (this *ChatClient) Close() {
 
 		this.conn.Close()
 		this.conn = nil
-		close(this.recvChan)
+
 		removeChatClient(this.uid)
 	}
 }
@@ -59,6 +60,7 @@ func (this *ChatClient) forceOffline() {
 
 func (this *ChatClient) serve() {
 	this.recvChan = make(chan []byte, 2)
+	this.quitChan = make(chan int, 1)
 	this.conn.SetMsgParser(this)
 	this.conn.SetListener(this)
 
@@ -66,19 +68,19 @@ func (this *ChatClient) serve() {
 }
 
 func (this *ChatClient) startProcess() {
-	timer := time.NewTimer(time.Second * 30)
+	timer := time.NewTimer(time.Second * 40)
 	countTimeOut := 0
 
 	for {
 		select {
+		case <-this.quitChan:
+			goto end
 		case <-timer.C:
 			fmt.Println("countTimeOut++")
 			countTimeOut++
 			if countTimeOut >= 2 {
-				this.Close()
 				goto end
 			}
-			timer.Reset(time.Second * 30)
 		case data := <-this.recvChan:
 			result := this.process(data)
 
@@ -87,13 +89,13 @@ func (this *ChatClient) startProcess() {
 			}
 
 			countTimeOut = 0
-			timer.Reset(time.Second * 30)
 		}
+		timer.Reset(time.Second * 40)
 	}
 end:
 	timer.Stop()
 	this.Close()
-	fmt.Println("tick end")
+	fmt.Println("chat process end")
 }
 
 func (this *ChatClient) process(data []byte) bool {
@@ -161,7 +163,7 @@ func (this *ChatClient) OnPostSend([]byte, int) {
 
 func (this *ChatClient) OnClose() {
 	//fmt.Println("tcpserver closed:", this.ChatClientAddr)
-	this.Close()
+	this.quitChan <- 1
 }
 
 func (this *ChatClient) OnRecvBusy([]byte) {

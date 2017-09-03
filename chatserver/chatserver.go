@@ -7,7 +7,7 @@ import (
 
 var server *gtnet.Server
 
-func chatServerInit(nettype, addr string) bool {
+func chatServerStart(nettype, addr string) bool {
 	var err error
 
 	server = gtnet.NewServer(nettype, addr, onNewConn)
@@ -20,6 +20,13 @@ func chatServerInit(nettype, addr string) bool {
 	fmt.Println("server start ok...")
 
 	return true
+}
+
+func chatServerStop() {
+	if server != nil {
+		server.Stop()
+		fmt.Println("server stoped...")
+	}
 }
 
 func onNewConn(conn gtnet.IConn) {
