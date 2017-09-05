@@ -359,6 +359,7 @@ func (this *redisDataManager) createUser(nickname, password, regip string) (bool
 
 	if err != nil {
 		fmt.Println("createUser error:", err.Error())
+		return false, 0
 	}
 
 	return true, uid
@@ -658,7 +659,7 @@ func (this *redisDataManager) addFriend(uid, fuid uint64, group string) int {
 	}
 
 	//check if fuid user is exists
-	ret, err = conn.Do("SISMEMBER", "user", fuid)
+	ret, err = conn.Do("EXISTS", fuid)
 
 	if err != nil {
 		fmt.Println("addFriend error:", err.Error())

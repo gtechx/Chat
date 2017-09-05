@@ -1,33 +1,37 @@
-servercenter����
-1.���߱���
-2.����/�����б�
-3.���䴴��
-4.��������/ɾ��
-5.������Ϣά��
-6.����
-7.�˺�ע��
-8.������Ϣά��
+servercenter负责：
+1.在线保持
+2.好友/房间列表
+3.房间创建
+4.好友添加/删除
+5.个人信息维护
+6.搜索
+7.账号注册
+8.房间信息维护
 
-chatserver����
-1.������Ϣ���䡢����
-a.һ��һ
-	�������Ƿ���ڣ���������ڣ��򷵻ش�����Ϣ��������ڣ�����Ƿ����ߣ�������ߣ����������¼�ķ�����������Ϣת����ȥ����������ߣ�����Ϣ�洢�����ݿ⡣
-b.��������
-	����Ƿ��ڼ����˸÷��䣬������ڣ��򷵻ش�����Ϣ������ڣ�����������Ա��������������Ƿ�ֱ�ӷ��ͻ��Ǵ����ݿ⡣
+chatserver负责：
+1.聊天信息传输、接收
+a.一对一
+	检查玩家是否存在，如果不存在，则返回错误消息。如果存在，检查是否在线，如果在线，则查找所登录的服务器，将消息转发过去。如果不在线，则将消息存储到数据库。
+b.房间聊天
+	检查是否在加入了该房间，如果不在，则返回错误消息。如果在，则遍历房间成员在线情况，觉得是否直接发送还是存数据库。
 	
-�������ܣ���Ҫ������������ϣ�
-һ��һʵʱ��������Ƶ
+其他功能，需要其它服务器配合：
+一对一实时语音、视频
 
-��Զ�ʵʱ��������Ƶ
+多对多实时语音、视频
 
-����ģʽʵʱ��������Ƶ
+主播模式实时语音、视频
 
 
 **********************
-ȡ��servercenter,���й��ܼ��е�chatserver������chatserverע���Լ���redis,��������������Ϣ���µ�redis��
-ÿ��chatserver��redis����ά��һ��30���key�����ĳ��chatserver�ҵ���key����ʧ�������������ᶨʱ����key��������ʧ�Ժ󣬿���ͶƱ��ȷ�Ϲҵ��ķ�����ʧЧ��
-ͶƱ����
-a.����ĳ������Key��ʧ���Է�����������key����incr��������һ����incr����1��Ϊ��һ������ͶƱ�ķ�����������incr�����ķ���������ɾ���÷�������һЩ��Ϣ��
-chatserver֮�����Ϣ���ݣ�ͨ��redis�ϵ�listʵ�֡�ÿ��chatserver����һ��list�����Ҷ�ʱȥlist�м�鲢pop�Լ�����Ϣ���͸���Ӧ��client��list�д洢������Ϣ���Ķ����ơ�
-1.����һ���˿ڣ����𷵻ؿͻ��˷������б�������������chatserver���أ������ͻ���Ӧ�õ�¼���ķ�������ַ���ͻ����øö˿ڻ�ȡ�������б���
+取消servercenter,所有功能集中到chatserver。所有chatserver注册自己到redis,并将自身负载信息更新到redis。
+每个chatserver在redis上面维护一个30秒的key，如果某个chatserver挂掉，key会消失，其他服务器会定时检查该key，发现消失以后，开启投票，确认挂掉的服务器失效。
+投票规则：
+a.发现某服务器Key消失，对服务器死亡的key进行incr操作，第一个（incr返回1的为第一个开启投票的服务器）进行incr操作的服务器负责删除该服务器的一些信息。
+chatserver之间的消息传递，通过redis上的list实现。每个chatserver都有一个list，并且定时去list中检查并pop自己的消息发送给相应的client。list中存储的是消息包的二进制。
+1.开启一个端口，负责返回客户端服务器列表，并根据所有chatserver负载，给出客户端应该登录到的服务器地址。客户端用该端口获取服务器列表。
 2.
+
+
+关于每个app登录问题
+每个app同样的账号可能会创建多个角色。每个角色分配一个id。每个角色登录的时候类似于xmpp的uid/roleid.如果要区分多端登录，可以这样uid/roleid/ios

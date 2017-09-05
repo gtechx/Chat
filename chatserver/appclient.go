@@ -52,7 +52,7 @@ func (this *AppClient) serve() {
 }
 
 func (this *AppClient) startProcess() {
-	timer := time.NewTimer(time.Second * 30)
+	timer := time.NewTimer(time.Second * 40)
 	countTimeOut := 0
 
 	for {
@@ -66,7 +66,7 @@ func (this *AppClient) startProcess() {
 				this.Close()
 				goto end
 			}
-			timer.Reset(time.Second * 30)
+			timer.Reset(time.Second * 40)
 		case data := <-this.recvChan:
 			result := this.process(data)
 
@@ -75,7 +75,7 @@ func (this *AppClient) startProcess() {
 			}
 
 			countTimeOut = 0
-			timer.Reset(time.Second * 30)
+			timer.Reset(time.Second * 40)
 		}
 	}
 end:

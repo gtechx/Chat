@@ -88,10 +88,12 @@ type dataManager interface {
 	getRoomVerifyType()
 
 	//app op
-	createApp(uid, uint64, name, password, desc, iconurl string) int
-	deleteApp(uid, uint64, name string) int
+	createApp(uid uint64, name, password, desc, iconurl string) int
+	deleteApp(uid uint64, name string) int
 	setAppOnline(appname string) int
-	setAppOffline(appname string) int
+	setAppOffline(appname string)
+	isAppUser(appname string, uid uint64) bool
+	createAppUser(puid uint64, appname, nickname, password, regip string) (int, uint64)
 
 	//app
 	checkAppLogin(appname, password string) int
