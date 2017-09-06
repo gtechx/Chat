@@ -11,6 +11,7 @@ var clientdelchan chan string
 var clientaddchan chan *ChatClient
 
 var chatlock *sync.Mutex
+var lastupdatecount int
 
 func init() {
 	chatClientMap = make(map[uint64]*ChatClient)
@@ -34,6 +35,14 @@ func newChatClient(uid uint64, conn gtnet.IConn) *ChatClient {
 
 	c.serve()
 	fmt.Println("new chat client:", uid)
+
+	clientcount := len(chatClientMap)
+	deltacount := clientcount - lastupdatecount
+	if deltacount >= 100 {
+		gDataManager.incrServerClientCountBy(serverAddr, deltacount)
+		lastupdatecount = clientcount
+	}
+
 	return c
 }
 
@@ -43,6 +52,13 @@ func removeChatClient(uid uint64) {
 
 	delete(chatClientMap, uid)
 	fmt.Println("delete chat client:", uid)
+
+	clientcount := len(chatClientMap)
+	deltacount := clientcount - lastupdatecount
+	if deltacount <= -100 {
+		gDataManager.incrServerClientCountBy(serverAddr, deltacount)
+		lastupdatecount = clientcount
+	}
 }
 
 func sendMsgToUid(uid uint64, data []byte) {

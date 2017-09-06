@@ -20,6 +20,9 @@ const (
 	MsgId_ReqTokenLogin
 	MsgId_RetTokenLogin
 
+	MsgId_ReqToken
+	MsgId_RetToken
+
 	MsgId_ReqLoginOut
 	MsgId_ReqRetLoginOut
 
@@ -50,6 +53,8 @@ const (
 
 	MsgId_Message
 	MsgId_RetMessage
+
+	MsgId_End
 )
 
 type NullCmd struct {
@@ -112,6 +117,19 @@ type MsgRetTokenLogin struct {
 	NullCmd
 	Result uint16
 	Count  byte
+}
+
+type MsgReqToken struct {
+	NullCmd
+	Uid      uint64
+	Password [32]byte
+}
+
+type MsgRetToken struct {
+	NullCmd
+	Result uint16
+	Uid    uint64
+	Token  []byte
 }
 
 type MsgReqLoginOut struct {
@@ -233,4 +251,20 @@ type MsgRetMessage struct {
 	NullCmd
 	Result uint16
 	Fuid   uint64
+}
+
+//app
+const (
+	MsgId_ReqTokenVerify uint16 = iota + MsgId_End
+	MsgId_RetTokenVerify
+}
+
+type MsgReqTokenVerify struct {
+	NullCmd
+	Token []byte
+}
+
+type MsgRetTokenVerify struct {
+	NullCmd
+	Result uint16
 }

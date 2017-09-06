@@ -8,6 +8,8 @@ import (
 	. "github.com/nature19862001/base/common"
 	"io"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func loadBanlanceInit() {
@@ -36,7 +38,7 @@ func getServerList(rw http.ResponseWriter, req *http.Request) {
 func starUserRegister() {
 	http.HandleFunc("/register", register)
 	http.HandleFunc("/create", create)
-	http.HandleFunc("/loginverify", loginVerify)
+	http.HandleFunc("/tokenverify", tokenVerify)
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -45,22 +47,35 @@ type Error struct {
 	ErrorCode int    `json:"errorcode"`
 }
 
-func loginVerify(rw http.ResponseWriter, req *http.Request) {
-	uuid := req.PostFormValue("uuid")
-	uid := Uint64(req.PostFormValue("uid"))
+func tokenVerify(rw http.ResponseWriter, req *http.Request) {
+	token := req.PostFormValue("token")
+	str := Authcode(token)
+	pos := strings.Index(str, ":")
+	timestamp := Int64(str[:pos])
+	uid := Uint64(str[pos:])
 
 	errmsg := new(Error)
-	if gDataManager.verifyAppLoginData(uuid, uid) {
-		if verifyAppLogin(uid) {
-			errmsg.ErrorCode = 0
-		} else {
-			errmsg.ErrorCode = 2
-			errmsg.ErrorMsg = "uid not logined"
-		}
+	if time.Now().Unix()-timestamp > 3600 {
+		errmsg.ErrorCode = ERR_TIME_OUT
+		errmsg.ErrorMsg = "ERR_TIME_OUT"
 	} else {
-		errmsg.ErrorCode = 1
-		errmsg.ErrorMsg = "uuid is not exist or uid is not right"
+		if !gDataManager.isUserExist(uid) {
+			errmsg.ErrorCode = ERR_USER_NOT_EXIST
+			errmsg.ErrorMsg = "ERR_USER_NOT_EXIST"
+		}
 	}
+
+	// if gDataManager.verifyAppLoginData(token, uid) {
+	// 	if verifyAppLogin(uid) {
+	// 		errmsg.ErrorCode = 0
+	// 	} else {
+	// 		errmsg.ErrorCode = 2
+	// 		errmsg.ErrorMsg = "uid not logined"
+	// 	}
+	// } else {
+	// 	errmsg.ErrorCode = 1
+	// 	errmsg.ErrorMsg = "uuid is not exist or uid is not right"
+	// }
 
 	data, _ := json.Marshal(&errmsg)
 	io.WriteString(rw, string(data))

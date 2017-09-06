@@ -17,7 +17,7 @@ func chatServerStart(nettype, addr string) bool {
 		fmt.Println(err.Error())
 		return false
 	}
-	fmt.Println("server start ok...")
+	fmt.Println("chat server start ok...")
 
 	return true
 }
@@ -25,7 +25,7 @@ func chatServerStart(nettype, addr string) bool {
 func chatServerStop() {
 	if server != nil {
 		server.Stop()
-		fmt.Println("server stoped...")
+		fmt.Println("chat server stoped...")
 	}
 }
 

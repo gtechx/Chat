@@ -109,6 +109,24 @@ func (this *Client) process(data []byte) bool {
 		}
 		ret.Result = uint16(code)
 		this.send(Bytes(ret))
+	case MsgId_ReqToken:
+		uid := Uint64(data[2:10])
+		password := string(data[10:])
+
+		code := gDataManager.checkLogin(uid, password)
+
+		ret := new(MsgRetToken)
+		ret.MsgId = MsgId_RetToken
+
+		if code == ERR_NONE {
+			token := Authcode(String(time.Now().Unix())+":"+String(uid), "ENCODE")
+			ret.Uid = uid
+			ret.Token = []byte(token)
+			fmt.Println("uid:" + String(uid) + " get token success")
+		}
+		ret.Result = uint16(code)
+		result = true
+		this.send(Bytes(ret))
 	}
 
 	return result
