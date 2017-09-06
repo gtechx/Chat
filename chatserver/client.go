@@ -6,6 +6,7 @@ import (
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
 	"github.com/nature19862001/base/php"
+	"strings"
 	"time"
 )
 
@@ -18,17 +19,6 @@ func newClient(conn gtnet.IConn) *Client {
 	c := &Client{conn: conn}
 	c.serve()
 	return c
-}
-
-func (this *Client) close() {
-	//fmt.Println("client:" + this.conn.ConnAddr() + " closed")
-	if this.conn != nil {
-		//this.conn.SetMsgParser(nil)
-		//this.conn.SetListener(nil)
-
-		//this.conn.Close()
-		this.conn = nil
-	}
 }
 
 func (this *Client) serve() {
@@ -44,36 +34,39 @@ func (this *Client) startProcess() {
 
 	select {
 	case <-timer.C:
+		this.conn.Close()
 	case data := <-this.recvChan:
-		this.process(data)
+		if this.process(data) {
+			this.conn.Close()
+		}
 	}
 
-	this.close()
+	this.conn = nil
 }
 
-func (this *Client) process(data []byte) {
+func (this *Client) process(data []byte) bool {
 	msgid := Uint16(data)
+	result := false
 
 	switch msgid {
 	case MsgId_ReqLogin:
 		uid := Uint64(data[2:10])
-		password := data[10:]
-		code := gDataManager.checkLogin(uid, string(password))
+		password := string(data[10:])
+
+		code := gDataManager.checkLogin(uid, password)
+
 		ret := new(MsgRetLogin)
 		ret.MsgId = MsgId_RetLogin
-		ret.Result = uint16(code)
+
 		if code == ERR_NONE {
-			ret.Result = uint16(ERR_NONE)
-			//copy(ret.IP[0:], []byte("127.0.0.1"))
-			//ret.Port = 9090
-			ok := gDataManager.setUserOnline(uid)
-			if !ok {
-				ret.Result = uint16(ERR_REDIS)
-			} else {
+			code = gDataManager.setUserOnline(uid)
+			if code == ERR_NONE {
 				newChatClient(uid, this.conn)
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
 		}
+		ret.Result = uint16(code)
+		result = code != ERR_NONE
 		this.send(Bytes(ret))
 	case MsgId_ReqAppLogin:
 		appname := string(data[2:34])
@@ -81,26 +74,44 @@ func (this *Client) process(data []byte) {
 		//check app login
 		//if login ok, then wait for app server verify
 		code := gDataManager.checkAppLogin(appname, password)
+
 		ret := new(MsgRetAppLogin)
 		ret.MsgId = MsgId_RetAppLogin
-		ret.Result = uint16(code)
+
 		if code == ERR_NONE {
-			//copy(ret.IP[0:], []byte("127.0.0.1"))
-			//ret.Port = 9090
 			code = gDataManager.setAppOnline(appname)
-			ret.Result = uint16(code)
 			if code == ERR_NONE {
-				token := Authcode(String(time.Now().Unix())+":"+appname, "ENCODE")
-
-				ret.Count = byte(len(token))
-				ret.Token = []byte(token)
-
 				newAppClient(appname, this.conn)
 				fmt.Println("addr:" + this.conn.ConnAddr() + " app logined success")
 			}
 		}
+		ret.Result = uint16(code)
+		result = code != ERR_NONE
+		this.send(Bytes(ret))
+	case MsgId_ReqTokenLogin:
+		token := data[2:]
+		str := Authcode(string(token))
+		pos := strings.Index(str, ":")
+
+		ret := new(MsgRetTokenLogin)
+		ret.MsgId = MsgId_RetTokenLogin
+
+		code := ERR_NONE
+		timestamp := Int64(str[:pos])
+
+		if time.Now().Unix()-timestamp > 3600 {
+			code = ERR_TIME_OUT
+			result = true
+		} else {
+			uid := Uint64(str[pos:])
+			newChatClient(uid, this.conn)
+			fmt.Println("addr:" + this.conn.ConnAddr() + " logined with token success")
+		}
+		ret.Result = uint16(code)
 		this.send(Bytes(ret))
 	}
+
+	return result
 }
 
 func (this *Client) send(buff []byte) {

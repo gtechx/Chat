@@ -17,6 +17,9 @@ const (
 	MsgId_ReqAppLogin
 	MsgId_RetAppLogin
 
+	MsgId_ReqTokenLogin
+	MsgId_RetTokenLogin
+
 	MsgId_ReqLoginOut
 	MsgId_ReqRetLoginOut
 
@@ -98,10 +101,17 @@ type MsgReqAppLogin struct {
 type MsgRetAppLogin struct {
 	NullCmd
 	Result uint16
+}
+
+type MsgReqTokenLogin struct {
+	NullCmd
+	Token []byte
+}
+
+type MsgRetTokenLogin struct {
+	NullCmd
+	Result uint16
 	Count  byte
-	Token  []byte
-	//IP     [16]byte
-	//Port   uint16
 }
 
 type MsgReqLoginOut struct {

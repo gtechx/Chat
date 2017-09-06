@@ -5,6 +5,7 @@ const (
 	//common error
 	ERR_NAME_NOT_VALID
 	ERR_NAME_MAX_LEN
+	ERR_TIME_OUT
 
 	//redis error
 	ERR_REDIS = iota + 1000

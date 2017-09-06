@@ -142,6 +142,9 @@ func (this *redisDataManager) isAppUser(appname string, uid uint64) bool {
 }
 
 func (this *redisDataManager) checkAppLogin(appname, password string) int {
+	if password == "" {
+		return ERR_PASSWORD_INVALID
+	}
 	conn := this.redisPool.Get()
 	defer conn.Close()
 	fmt.Println("checkAppLogin:", password, appname)

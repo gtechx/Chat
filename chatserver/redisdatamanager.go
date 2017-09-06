@@ -109,6 +109,9 @@ func redisOnBorrow(c redis.Conn, t time.Time) error {
 }
 
 func (this *redisDataManager) checkLogin(uid uint64, password string) int {
+	if password == "" {
+		return ERR_PASSWORD_INVALID
+	}
 	conn := this.redisPool.Get()
 	defer conn.Close()
 	fmt.Println("checklogin:", uid, password)
@@ -403,7 +406,7 @@ func (this *redisDataManager) getUserList(uid uint64) ([]uint64, int) {
 	return userlist, ERR_NONE
 }
 
-func (this *redisDataManager) setUserOnline(uid uint64) bool {
+func (this *redisDataManager) setUserOnline(uid uint64) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -415,7 +418,7 @@ func (this *redisDataManager) setUserOnline(uid uint64) bool {
 
 	if err != nil {
 		fmt.Println("setUserOnline error:", err.Error())
-		return false
+		return ERR_REDIS
 	}
 
 	// ret, err := conn.Do("HSET", uid, "online", serverAddr)
@@ -429,7 +432,7 @@ func (this *redisDataManager) setUserOnline(uid uint64) bool {
 	// 	return false
 	// }
 
-	return true
+	return ERR_NONE
 }
 
 func (this *redisDataManager) getUserOnline(uid uint64) ([]uint64, int) {

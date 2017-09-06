@@ -36,7 +36,7 @@ type dataManager interface {
 	getUserOnline(uid uint64) ([]uint64, int)
 
 	createUser(nickname, password, regip string) (bool, uint64)
-	setUserOnline(uid uint64) bool
+	setUserOnline(uid uint64) int
 	setUserOffline(uid uint64)
 
 	isUserOnline(uid uint64) bool
