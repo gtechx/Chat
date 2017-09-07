@@ -255,16 +255,30 @@ type MsgRetMessage struct {
 
 //app
 const (
-	MsgId_ReqTokenVerify uint16 = iota + MsgId_End
-	MsgId_RetTokenVerify
-}
+	AppMsgId_ReqTokenVerify uint16 = iota + MsgId_End
+	AppMsgId_RetTokenVerify
 
-type MsgReqTokenVerify struct {
+	AppMsgId_ReqToken
+	AppMsgId_RetToken
+)
+
+type AppMsgReqTokenVerify struct {
 	NullCmd
 	Token []byte
 }
 
-type MsgRetTokenVerify struct {
+type AppMsgRetTokenVerify struct {
 	NullCmd
 	Result uint16
+}
+
+type AppMsgReqToken struct {
+	NullCmd
+	Uid uint64
+}
+
+type AppMsgRetToken struct {
+	NullCmd
+	Result uint16
+	Token  []byte
 }

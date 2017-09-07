@@ -12,8 +12,8 @@ var appMsgProcesserMap map[uint16]func(*AppClient, []byte)
 
 func init() {
 	appMsgProcesserMap = make(map[uint16]func(*AppClient, []byte))
-	// appMsgProcesserMap[MsgId_ReqFriendList] = OnReqFriendList
-	// appMsgProcesserMap[MsgId_ReqFriendAdd] = OnReqFriendAdd
+	appMsgProcesserMap[AppMsgId_ReqToken] = AppOnReqToken
+	appMsgProcesserMap[AppMsgId_ReqTokenVerify] = AppOnReqTokenVerify
 	// appMsgProcesserMap[MsgId_ReqFriendDel] = OnReqFriendDel
 	// appMsgProcesserMap[MsgId_ReqUserToBlack] = OnReqUserToBlack
 	// appMsgProcesserMap[MsgId_ReqRemoveUserInBlack] = OnReqRemoveUserInBlack
