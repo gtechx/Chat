@@ -54,6 +54,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="src\io\FileInputStream.cs" />
+    <Compile Include="src\io\HttpStream.cs" />
+    <Compile Include="src\io\InputStream.cs" />
+    <Compile Include="src\io\LittleEndianDataInputStream.cs" />
+    <Compile Include="src\io\LittleEndianDataOutputStream.cs" />
+    <Compile Include="src\io\OutputStream.cs" />
+    <Compile Include="src\io\SocketInputStream.cs" />
+    <Compile Include="src\io\SocketOutputStream.cs" />
+    <Compile Include="src\log\GLog.cs" />
+    <Compile Include="src\net\GSocketClient.cs" />
+    <Compile Include="src\net\GWebClient.cs" />
+    <Compile Include="src\net\protocol\GRtnServerCmd.cs" />
+    <Compile Include="src\net\protocol\GServerCmd.cs" />
+    <Compile Include="src\net\protocol\IServerCmd.cs" />
+    <Compile Include="src\thread\GThreadPool.cs" />
+    <Compile Include="src\thread\Runnable.cs" />
+    <Compile Include="src\utils\ByteUtils.cs" />
+    <Compile Include="src\utils\CryptUtils.cs" />
+    <Compile Include="src\utils\FileUtils.cs" />
+    <Compile Include="src\utils\MD5Utils.cs" />
+    <Compile Include="src\utils\TimeUtils.cs" />
     <Compile Include="TestPage.xaml.cs">
       <DependentUpon>TestPage.xaml</DependentUpon>
     </Compile>
