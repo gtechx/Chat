@@ -65,7 +65,7 @@ namespace GTech.IO
             byte[] bytes = new byte[2];
 
             inputStream.Read(bytes);
-            return (short)System.BitConverter.ToUInt16(bytes, 0);
+            return (short)System.BitConverter.ToInt16(bytes, 0);
         }
 
         public char readChar()
@@ -86,9 +86,12 @@ namespace GTech.IO
             return inputStream.Read(bytes, byteOffset, byteCount);
         }
 
-        public int readUnsignedShort()
+        public ushort readUnsignedShort()
         {
-            return ((int) readShort()) & 0xffff;
+            byte[] bytes = new byte[2];
+
+            inputStream.Read(bytes);
+            return System.BitConverter.ToUInt16(bytes, 0);
         }
 
         /**
@@ -100,14 +103,12 @@ namespace GTech.IO
          * @throws IOException
          *             if the stream is closed or another IOException occurs.
          */
-        public int readUnsignedByte()
+        public sbyte readSByte()
         {
-            int temp = inputStream.Read();
-            if (temp < 0)
-            {
-                throw new Exception();
-            }
-            return temp;
+            byte[] bytes = new byte[1];
+
+            inputStream.Read(bytes);
+            return (sbyte)bytes[0];
         }
 	
     }

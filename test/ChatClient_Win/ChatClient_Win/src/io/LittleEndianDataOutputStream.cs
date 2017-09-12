@@ -44,13 +44,31 @@ namespace GTech.IO
             os.write(bytes);
         }
 
+        public void writeInt(uint data)
+        {
+            byte[] bytes = System.BitConverter.GetBytes(data);
+            os.write(bytes);
+        }
+
         public void writeLong(long data)
         {
             byte[] bytes = System.BitConverter.GetBytes(data);
             os.write(bytes);
         }
 
+        public void writeLong(ulong data)
+        {
+            byte[] bytes = System.BitConverter.GetBytes(data);
+            os.write(bytes);
+        }
+
         public void writeShort(short data)
+        {
+            byte[] bytes = System.BitConverter.GetBytes(data);
+            os.write(bytes);
+        }
+
+        public void writeUShort(ushort data)
         {
             byte[] bytes = System.BitConverter.GetBytes(data);
             os.write(bytes);
