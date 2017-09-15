@@ -6,7 +6,7 @@ namespace GTech.Net.Protocol
 {
     public class GServerCmd : IServerCmd
     {
-        protected UInt16 size;
+        //protected UInt16 size;
         protected UInt16 msgId;
 
         public GServerCmd()
@@ -16,15 +16,15 @@ namespace GTech.Net.Protocol
 
         public virtual bool read(LittleEndianDataInputStream dis)
         {
-            size = dis.readUnsignedShort();
-            msgId = dis.readUnsignedShort();
+            //size = dis.readUShort();
+            msgId = dis.readUShort();
 
             return true;
         }
 
         public virtual bool write(LittleEndianDataOutputStream dos)
         {
-            size = (ushort)(getLength() - 4);
+            ushort size = (ushort)(getLength());
 
             dos.writeUShort(size);
             dos.writeUShort(msgId);
@@ -46,7 +46,7 @@ namespace GTech.Net.Protocol
         public virtual string toString()
         {
             // TODO Auto-generated method stub
-            return " size=" + size + " msgId=" + msgId;
+            return "msgId=" + msgId;
         }
 
     }

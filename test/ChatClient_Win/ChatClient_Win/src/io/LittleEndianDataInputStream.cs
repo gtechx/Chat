@@ -86,7 +86,7 @@ namespace GTech.IO
             return inputStream.Read(bytes, byteOffset, byteCount);
         }
 
-        public ushort readUnsignedShort()
+        public ushort readUShort()
         {
             byte[] bytes = new byte[2];
 
