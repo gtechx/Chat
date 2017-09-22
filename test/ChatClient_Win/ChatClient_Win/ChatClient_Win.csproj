@@ -63,11 +63,16 @@
     <Compile Include="src\io\SocketInputStream.cs" />
     <Compile Include="src\io\SocketOutputStream.cs" />
     <Compile Include="src\log\GLog.cs" />
+    <Compile Include="src\net\ChatClient.cs" />
+    <Compile Include="src\net\ChatClient_Req.cs" />
     <Compile Include="src\net\GSocketClient.cs" />
     <Compile Include="src\net\GWebClient.cs" />
     <Compile Include="src\net\protocol\GRtnServerCmd.cs" />
     <Compile Include="src\net\protocol\GServerCmd.cs" />
     <Compile Include="src\net\protocol\IServerCmd.cs" />
+    <Compile Include="src\net\protocol\Protocol.cs" />
+    <Compile Include="src\net\protocol\ProtocolManager.cs" />
+    <Compile Include="src\net\TcpClient.cs" />
     <Compile Include="src\thread\GThreadPool.cs" />
     <Compile Include="src\thread\Runnable.cs" />
     <Compile Include="src\utils\ByteUtils.cs" />

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GTech.IO;
+using GTech.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -34,6 +36,12 @@ namespace GTech.Net
         public IMsgParse Parser { get; set; }
         public IConnListener Listener { get; set; }
         public string Addr { get; set; }
+
+        LittleEndianDataOutputStream _sendStream;
+        public LittleEndianDataOutputStream SendStream
+        {
+            get { return _sendStream; }
+        }
 
         private string ip = "";
         private int port = -1;
@@ -75,13 +83,16 @@ namespace GTech.Net
             _spos = 0;
             _sending = 0;
             buffList = new List<byte[]>();
-            buffList.Capacity = 1024;
+            for(int i = 0; i < 1024; i++)
+            {
+                buffList.Add(null);
+            }
             _asyncSendMethod = new AsyncSendMethod(this._asyncSend);
             _asyncCallback = new AsyncCallback(_onSent);
             syncobj = new Net.TcpClient.SyncObject();
         }
 
-        public bool Connect()
+        public void Connect()
         {
             if(ip == "" || port == -1)
             {
@@ -109,8 +120,9 @@ namespace GTech.Net
                 throw e;
             }
 
+            _sendStream = new LittleEndianDataOutputStream(new SocketOutputStream(socket));
+
             startRecv();
-            return true;
         }
 
         public void Close()
@@ -139,7 +151,7 @@ namespace GTech.Net
 
         public void Send(byte[] buff)
         {
-            if (socket != null)
+            if (socket == null)
                 return;
 
             if (0 == Interlocked.Add(ref _sending, 0))
@@ -155,6 +167,11 @@ namespace GTech.Net
             int space = 0;
             int tt_wpos = _wpos % buffList.Count;
             int tt_spos = t_spos % buffList.Count;
+            //if(buffList.Count != 0)
+            //{
+            //    tt_wpos = _wpos % buffList.Count;
+            //    tt_spos = t_spos % buffList.Count;
+            //}
 
             if (tt_wpos >= tt_spos)
                 space = buffList.Count - tt_wpos + tt_spos - 1;
@@ -225,6 +242,7 @@ namespace GTech.Net
                     }
                     catch (SocketException se)
                     {
+                        GLog.d("sending error:"+se.ToString());
                         return;
                     }
 
@@ -292,6 +310,7 @@ namespace GTech.Net
                 }
                 catch (SocketException se)
                 {
+                    GLog.d("recv error:" + se.ToString());
                     break;
                 }
 
@@ -312,6 +331,7 @@ namespace GTech.Net
                         }
                         catch (SocketException se)
                         {
+                            GLog.d("recv error:" + se.ToString());
                             break;
                         }
 
@@ -320,6 +340,10 @@ namespace GTech.Net
                             tmpparse.ParseMsg(databuff);
                         }
                     }
+                }
+                else if(num == 0)
+                {
+                    break;
                 }
             }
 

@@ -4,14 +4,74 @@ using GTech.Utils;
 
 namespace GTech.Net.Protocol
 {
+    public enum MsgId : ushort
+    {
+        MsgId_Tick = 1000,
+        MsgId_Error,
+
+        MsgId_Echo,
+
+        MsgId_ReqLogin,
+        MsgId_RetLogin,
+
+        MsgId_ReqAppLogin,
+        MsgId_RetAppLogin,
+
+        MsgId_ReqTokenLogin,
+        MsgId_RetTokenLogin,
+
+        MsgId_ReqToken,
+        MsgId_RetToken,
+
+        MsgId_ReqLoginOut,
+        MsgId_ReqRetLoginOut,
+
+        MsgId_ReqFriendList,
+        MsgId_RetFriendList,
+
+        MsgId_ReqFriendAdd,
+        MsgId_RetFriendAdd,
+
+        MsgId_FriendReqAgree,
+        MsgId_FriendReq,
+
+        MsgId_FriendReqResult,
+
+        MsgId_ReqFriendDel,
+        MsgId_RetFriendDel,
+
+        MsgId_ReqUserToBlack,
+        MsgId_RetUserToBlack,
+
+        MsgId_ReqRemoveUserInBlack,
+        MsgId_RetRemoveUserInBlack,
+
+        MsgId_ReqMoveFriendToGroup,
+        MsgId_RetMoveFriendToGroup,
+
+        MsgId_ReqSetFriendVerifyType,
+        MsgId_RetSetFriendVerifyType,
+
+        MsgId_Message,
+        MsgId_RetMessage,
+
+        MsgId_End,
+    };
+
     public class GServerCmd : IServerCmd
     {
         //protected UInt16 size;
-        protected UInt16 msgId;
+        protected ushort msgId;
 
         public GServerCmd()
         {
             //header = getLength() - 4;
+        }
+
+        public GServerCmd(byte[] buff)
+        {
+            //header = getLength() - 4;
+            msgId = System.BitConverter.ToUInt16(buff, 0);
         }
 
         public virtual bool read(LittleEndianDataInputStream dis)
@@ -40,7 +100,12 @@ namespace GTech.Net.Protocol
 
         public virtual byte[] toBytes()
         {
-            throw new NotImplementedException();
+            ushort length = (ushort)getLength();
+            byte[] data = new byte[length + 2];
+            System.Array.Copy(System.BitConverter.GetBytes(length), 0, data, 0, 2);
+            System.Array.Copy(System.BitConverter.GetBytes(msgId), 0, data, 2, 2);
+
+            return data;
         }
 
         public virtual string toString()

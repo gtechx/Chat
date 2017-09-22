@@ -8,11 +8,8 @@ namespace GTech.Log
 {
     public class GLog
     {
-        static int LOG_WIDTH_LENGTH = 70;
-
-        static string sTag = "CSGCloud:";
+        static string sTag = "GLog:";
         static bool sIsDebug = true;
-        static bool sIsError = true;
 
         public static bool isDebug()
         {

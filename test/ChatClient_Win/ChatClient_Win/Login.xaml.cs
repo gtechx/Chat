@@ -36,6 +36,7 @@ namespace ChatClient_Win
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
+            (App.Current as App).Login(ulong.Parse(textBox.Text), passwordBox.Password);
             this.NavigationService.Navigate(new Friends());
         }
     }

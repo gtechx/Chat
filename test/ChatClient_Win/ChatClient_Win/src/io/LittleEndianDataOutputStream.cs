@@ -56,7 +56,7 @@ namespace GTech.IO
             os.write(bytes);
         }
 
-        public void writeLong(ulong data)
+        public void writeULong(ulong data)
         {
             byte[] bytes = System.BitConverter.GetBytes(data);
             os.write(bytes);
