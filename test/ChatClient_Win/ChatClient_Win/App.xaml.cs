@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Navigation;
 
 namespace ChatClient_Win
 {
@@ -48,12 +49,23 @@ namespace ChatClient_Win
         PlayerData playerData;
         Timer tickTimer;
 
-        protected override void OnActivated(EventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
+            GLog.d("OnStartup");
             chatClient = new ChatClient("127.0.0.1:9090");
             chatClient.LoginedHandler += OnLogined;
             chatClient.ErrorHandler += OnError;
             chatClient.CloseHandler += OnClose;
+        }
+
+        protected override void OnLoadCompleted(NavigationEventArgs e)
+        {
+            GLog.d("OnLoadCompleted");
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            GLog.d("OnExit");
         }
 
         public void Login(ulong uid, string password)

@@ -9,7 +9,7 @@ using GTech.Utils;
 
 namespace GTech.Net
 {
-    public partial class ChatClient : IMsgParse, IConnListener
+    public partial class ChatClient
     {
         public void Login(ulong account, string password)
         {
