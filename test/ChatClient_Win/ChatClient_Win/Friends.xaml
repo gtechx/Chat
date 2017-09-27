@@ -9,21 +9,65 @@
       Title="Friends" Width="300" Height="600" Loaded="Page_Loaded">
 
     <Grid>
-        <TreeView x:Name="treeView">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="90*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Height="65" VerticalAlignment="Top" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50*"></RowDefinition>
+                <RowDefinition Height="50*"></RowDefinition>
+                <RowDefinition Height="50*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="80*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0" Grid.RowSpan="3" x:Name="image" Margin="10,5,0,5" HorizontalAlignment="Left" Width="65" Source="avatar_icon1.PNG"/>
+            <TextBox Grid.Row="0" Grid.Column="1" x:Name="textBox" TextWrapping="Wrap" Text="TextBox" FontWeight="Bold" VerticalContentAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" x:Name="textBox1" TextWrapping="Wrap" Text="TextBox" VerticalContentAlignment="Center"/>
+            <Grid Grid.Row="2" Grid.Column="1" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                <Button Width="20" HorizontalAlignment="Left" Content="1"></Button>
+                <Button Width="20" HorizontalAlignment="Left" Content="2" Margin="20,0,0,0"></Button>
+                <Button Width="20" HorizontalAlignment="Left" Content="3" Margin="40,0,0,0"></Button>
+            </Grid>
+            <Button x:Name="button" Content="Button" Grid.Column="2" Grid.RowSpan="3"/>
+        </Grid>
+        <Grid Grid.Row="1" Background="#B2FFFFFF">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="30"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0"></Image>
+            <TextBox Grid.Column="1" Text="search"/>
+        </Grid>
+        <TreeView Grid.Row="2" x:Name="treeView">
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType = "{x:Type local:Data}"
-                                ItemsSource = "{Binding Path=FList}">
-                    <TextBlock Text="{Binding Path=Name}"/>
+                                ItemsSource = "{Binding FList}">
+                    <TextBlock Text="{Binding Name}"/>
                 </HierarchicalDataTemplate>
 
                 <DataTemplate DataType="{x:Type local:FData}">
                     <Grid>
                         <Image x:Name="image" HorizontalAlignment="Left" Height="40" Margin="10,10,0,0" VerticalAlignment="Top" Width="40" Source="avatar_icon1.PNG"/>
-                        <Label x:Name="label" Content="{Binding Path=Name}" HorizontalAlignment="Left" Height="25" Margin="55,7,0,0" VerticalAlignment="Top" Width="87"/>
-                        <Label x:Name="label_Copy" Content="{Binding Path=Desc}" HorizontalAlignment="Left" Height="25" Margin="56,30.303,0,0" VerticalAlignment="Top" Width="87"/>
+                        <Label x:Name="label" Content="{Binding Name}" HorizontalAlignment="Left" Height="25" Margin="55,7,0,0" VerticalAlignment="Top" Width="87"/>
+                        <Label x:Name="label_Copy" Content="{Binding Desc}" HorizontalAlignment="Left" Height="25" Margin="56,30.303,0,0" VerticalAlignment="Top" Width="87"/>
                     </Grid>
                 </DataTemplate>
             </TreeView.Resources>
         </TreeView>
+        <Grid Grid.Row="3">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#FFB8B2B2" Offset="0"/>
+                    <GradientStop Color="White" Offset="1"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Button Width="30" HorizontalAlignment="Left" Content="+" FontSize="18.667"></Button>
+        </Grid>
     </Grid>
 </Page>

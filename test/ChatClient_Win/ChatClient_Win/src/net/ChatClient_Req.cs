@@ -42,10 +42,16 @@ namespace GTech.Net
 
         }
 
+        byte[] tickData;
         public void SendTick()
         {
-            MsgTick tick = new MsgTick();
-            tcpClient.Send(tick.toBytes());
+            if(tickData == null)
+            {
+                MsgTick tick = new MsgTick();
+                tickData = tick.toBytes();
+            }
+            
+            tcpClient.Send(tickData);
         }
     }
 }

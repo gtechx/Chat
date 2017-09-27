@@ -1,0 +1,14 @@
+﻿<Window x:Class="ChatClient_Win.FriendAdd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChatClient_Win"
+        mc:Ignorable="d"
+        Title="FriendAdd" Height="76" Width="284">
+    <Grid>
+        <TextBox x:Name="textBox" Height="25" Margin="10,10,116,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" d:LayoutOverrides="HorizontalAlignment"/>
+        <Button x:Name="button" Content="Button" HorizontalAlignment="Right" Height="25" Margin="0,11,21,0" VerticalAlignment="Top" Width="70"/>
+
+    </Grid>
+</Window>

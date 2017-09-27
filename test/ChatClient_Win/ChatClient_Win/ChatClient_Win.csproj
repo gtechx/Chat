@@ -54,6 +54,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="FriendAdd.xaml.cs">
+      <DependentUpon>FriendAdd.xaml</DependentUpon>
+    </Compile>
     <Compile Include="src\io\FileInputStream.cs" />
     <Compile Include="src\io\HttpStream.cs" />
     <Compile Include="src\io\InputStream.cs" />
@@ -83,6 +86,10 @@
     <Compile Include="TestPage.xaml.cs">
       <DependentUpon>TestPage.xaml</DependentUpon>
     </Compile>
+    <Page Include="FriendAdd.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Friends.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
