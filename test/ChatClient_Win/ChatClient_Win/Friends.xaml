@@ -67,7 +67,7 @@
                     <GradientStop Color="White" Offset="1"/>
                 </LinearGradientBrush>
             </Grid.Background>
-            <Button Width="30" HorizontalAlignment="Left" Content="+" FontSize="18.667"></Button>
+            <Button Width="30" Click="Button_Click" HorizontalAlignment="Left" Content="+" FontSize="18.667"></Button>
         </Grid>
     </Grid>
 </Page>

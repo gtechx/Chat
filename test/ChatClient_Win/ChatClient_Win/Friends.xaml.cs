@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GTech.Log;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -58,6 +59,16 @@ namespace ChatClient_Win
             }
 
             treeView.ItemsSource = datalist;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            FriendAdd fawin = new FriendAdd();
+
+            if (fawin.ShowDialog() == true)
+            {
+                GLog.d("friend sending...");
+            }
         }
     }
 }

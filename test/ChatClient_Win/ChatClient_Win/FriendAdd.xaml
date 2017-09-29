@@ -8,7 +8,7 @@
         Title="FriendAdd" Height="76" Width="284">
     <Grid>
         <TextBox x:Name="textBox" Height="25" Margin="10,10,116,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" d:LayoutOverrides="HorizontalAlignment"/>
-        <Button x:Name="button" Content="Button" HorizontalAlignment="Right" Height="25" Margin="0,11,21,0" VerticalAlignment="Top" Width="70"/>
+        <Button x:Name="button" Click="button_Click" Content="Button" HorizontalAlignment="Right" Height="25" Margin="0,11,21,0" VerticalAlignment="Top" Width="70"/>
 
     </Grid>
 </Window>
