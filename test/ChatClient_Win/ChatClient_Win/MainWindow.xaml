@@ -7,9 +7,18 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <Image x:Name="image" HorizontalAlignment="Left" Height="40" Margin="10,10,0,0" VerticalAlignment="Top" Width="40" Source="avatar_icon1.PNG"/>
-        <Label x:Name="label" Content="name" HorizontalAlignment="Left" Height="25" Margin="55,7,0,0" VerticalAlignment="Top" Width="87"/>
-        <Label x:Name="label_Copy" Content="desc" HorizontalAlignment="Left" Height="25" Margin="56,30.303,0,0" VerticalAlignment="Top" Width="87"/>
-
+        <ListView x:Name="listView" HorizontalAlignment="Right" Margin="0,55,112,85" Width="140">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+            <ListViewItem Content="ListViewItem" Margin="0"/>
+            <ListViewItem Content="ListViewItem" Margin="0"/>
+        </ListView>
+        <ListBox x:Name="listBox" HorizontalAlignment="Left" Margin="35,90,0,95" Width="135">
+            <ListBoxItem Content="ListBoxItem"/>
+            <ListBoxItem Content="ListBoxItem"/>
+        </ListBox>
     </Grid>
 </Window>

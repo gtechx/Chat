@@ -63,7 +63,7 @@ namespace ChatClient_Win
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            FriendAdd fawin = new FriendAdd();
+            TalkWin fawin = new TalkWin();
 
             if (fawin.ShowDialog() == true)
             {
