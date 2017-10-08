@@ -64,11 +64,12 @@ namespace ChatClient_Win
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             TalkWin fawin = new TalkWin();
-
-            if (fawin.ShowDialog() == true)
-            {
-                GLog.d("friend sending...");
-            }
+            fawin.Owner = this.Parent as Window;
+            fawin.Show();
+            //if (fawin.ShowDialog() == true)
+            //{
+            //    GLog.d("friend sending...");
+            //}
         }
     }
 }

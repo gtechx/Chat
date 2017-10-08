@@ -5,29 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient_Win"
         mc:Ignorable="d"
-        Title="TalkWin" Height="300" Width="300">
+        Title="TalkWin" Height="405" Width="453">
     <Window.Resources>
-        <DataTemplate x:Key="xxx">
+        <DataTemplate x:Key="dt_talk">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="100"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="150"></RowDefinition>
                 </Grid.RowDefinitions>
-                <ListBox Grid.Row="0"></ListBox>
-                <TextBox Grid.Row="1" Text="bbbbb"  VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="Wrap"></TextBox>
+                <ListBox Grid.Row="0" BorderBrush="{x:Null}"></ListBox>
+                <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="2"></GridSplitter>
+                <Grid Grid.Row="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="20"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="30"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0"></Grid>
+                    <TextBox Grid.Row="1" Text="bbbbb"  VerticalScrollBarVisibility="Auto" AcceptsReturn="True" TextWrapping="Wrap"></TextBox>
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="100"></ColumnDefinition>
+                            <ColumnDefinition Width="100"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="1" Content="Close" Margin="5,2"></Button>
+                        <Button Grid.Column="2" Content="Send" Margin="5,2"></Button>
+                    </Grid>
+                </Grid>
             </Grid>
         </DataTemplate>
-        <DataTemplate x:Key="xxx2">
-            <Grid>
+        <DataTemplate x:Key="dt_tabitem">
+            <Grid Width="{Binding ElementName=Border, Path=ActualWidth}" HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="20"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Image Grid.Column="0"  Source="avatar_icon1.PNG"></Image>
-                <TextBox Grid.Column="1" Text="aaaa"></TextBox>
+                <TextBox Grid.Column="1" Text="aaaa" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" BorderBrush="{x:Null}" IsReadOnly="True" IsUndoEnabled="False" IsHitTestVisible="False" Background="Transparent" UndoLimit="0"></TextBox>
             </Grid>
         </DataTemplate>
         <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#FFF" />
+        <SolidColorBrush x:Key="WindowBackgroundBrush2" Color="#ccc" />
         <SolidColorBrush x:Key="SolidBorderBrush" Color="#888" />
         <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#888" />
         <SolidColorBrush x:Key="DisabledBorderBrush" Color="#AAA" />
@@ -42,7 +62,7 @@
         </LinearGradientBrush>
         <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#EEE" />
 
-        <Style x:Key="tabitem1" TargetType="{x:Type TabItem}">
+        <Style x:Key="style_tabitem" TargetType="{x:Type TabItem}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabItem}">
@@ -50,24 +70,24 @@
                             <Border 
                                 Name="Border"
                                 Margin="0,0,-4,0" 
-                                Background="{StaticResource LightBrush}"
+                                Background="{StaticResource WindowBackgroundBrush}"
                                 BorderBrush="{StaticResource SolidBorderBrush}" 
                                 BorderThickness="1,1,1,1" 
                                 CornerRadius="5,2,2,5" >
                                 <ContentPresenter x:Name="ContentSite"
+                                                  Height="40"
                                   VerticalAlignment="Center"
                                   HorizontalAlignment="Center"
                                   ContentSource="Header"
-                                  Margin="12,2,12,2"
-                                  RecognizesAccessKey="True" ContentTemplate="{StaticResource xxx2}">
+                                  RecognizesAccessKey="True" ContentTemplate="{StaticResource dt_tabitem}">
                                 </ContentPresenter>
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="Panel.ZIndex" Value="100" />
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource WindowBackgroundBrush}" />
-                                <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0" />
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource WindowBackgroundBrush2}" />
+                                <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,1" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Border" Property="Background" Value="{StaticResource DisabledBackgroundBrush}" />
@@ -80,7 +100,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="tab1" TargetType="{x:Type TabControl}">
+        <Style x:Key="style_tab" TargetType="{x:Type TabControl}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="Template">
@@ -88,7 +108,8 @@
                     <ControlTemplate TargetType="{x:Type TabControl}">
                         <Grid KeyboardNavigation.TabNavigation="Local">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100"></ColumnDefinition>
+                                <ColumnDefinition Width="100" MaxWidth="200" MinWidth="50"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
                             <TabPanel 
@@ -100,9 +121,10 @@
                                 KeyboardNavigation.TabIndex="1"
                                 Background="Transparent">
                             </TabPanel>
+                            <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center"></GridSplitter>
                             <Border 
                                 Name="Border" 
-                                Grid.Column="1" 
+                                Grid.Column="2" 
                                 Background="{StaticResource WindowBackgroundBrush}" 
                                 BorderBrush="{StaticResource SolidBorderBrush}" 
                                 BorderThickness="1" 
@@ -110,7 +132,7 @@
                                 KeyboardNavigation.TabNavigation="Local"
                                 KeyboardNavigation.DirectionalNavigation="Contained"
                                 KeyboardNavigation.TabIndex="2" >
-                                <ContentPresenter Name="PART_SelectedContentHost" ContentTemplate="{StaticResource xxx}" Margin="4" ContentSource="SelectedContent" />        
+                                <ContentPresenter Name="PART_SelectedContentHost" ContentTemplate="{StaticResource dt_talk}" Margin="4" ContentSource="SelectedContent" />
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -124,7 +146,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="tab2" TargetType="{x:Type TabControl}">
+        <Style x:Key="style_tab2" TargetType="{x:Type TabControl}">
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="Template">
@@ -153,7 +175,7 @@
                                 KeyboardNavigation.TabNavigation="Local"
                                 KeyboardNavigation.DirectionalNavigation="Contained"
                                 KeyboardNavigation.TabIndex="2" >
-                                <ContentPresenter Name="PART_SelectedContentHost" ContentTemplate="{StaticResource xxx}" Margin="4" ContentSource="SelectedContent" />
+                                <ContentPresenter Name="PART_SelectedContentHost" ContentTemplate="{StaticResource dt_talk}" Margin="4" ContentSource="SelectedContent" />
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -170,7 +192,7 @@
 
     </Window.Resources>
     <Grid>
-        <TabControl x:Name="tabControl" Style="{StaticResource tab1}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource tabitem1}">
+        <TabControl x:Name="tabControl" Style="{StaticResource style_tab}" TabStripPlacement="Left" ItemContainerStyle="{StaticResource style_tabitem}">
             <TabItem Header="TabItem">
                 <Grid Background="#FFE5E5E5"/>
             </TabItem>
