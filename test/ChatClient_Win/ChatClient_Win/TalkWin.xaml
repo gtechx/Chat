@@ -7,6 +7,34 @@
         mc:Ignorable="d"
         Title="TalkWin" Height="405" Width="453">
     <Window.Resources>
+        <DataTemplate x:Key="dt_listboxitem">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <TextBox Grid.Row="0" Text="1111"></TextBox>
+                <TextBox Grid.Row="1" Text="222"></TextBox>
+            </Grid>
+        </DataTemplate>
+        <Style x:Key="style_listboxitem" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Source="avatar_icon1.PNG"></Image>
+                            <Grid Grid.Column="1">
+                                <ContentPresenter ContentSource="Content" ContentTemplate="{StaticResource dt_listboxitem}"></ContentPresenter>
+                            </Grid>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <DataTemplate x:Key="dt_talk">
             <Grid>
                 <Grid.RowDefinitions>
@@ -14,7 +42,9 @@
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="150"></RowDefinition>
                 </Grid.RowDefinitions>
-                <ListBox Grid.Row="0" BorderBrush="{x:Null}"></ListBox>
+                <ListBox Grid.Row="0" BorderBrush="{x:Null}" ItemContainerStyle="{StaticResource style_listboxitem}">
+                    <ListBoxItem Content="aaa"></ListBoxItem>
+                </ListBox>
                 <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="2"></GridSplitter>
                 <Grid Grid.Row="2">
                     <Grid.RowDefinitions>
