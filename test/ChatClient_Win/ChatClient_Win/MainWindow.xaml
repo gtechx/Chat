@@ -16,9 +16,18 @@
             <ListViewItem Content="ListViewItem" Margin="0"/>
             <ListViewItem Content="ListViewItem" Margin="0"/>
         </ListView>
-        <ListBox x:Name="listBox" HorizontalAlignment="Left" Margin="35,90,0,95" Width="135">
+        <ListBox x:Name="listBox" HorizontalAlignment="Left" Width="135" Height="135" VerticalAlignment="Top">
             <ListBoxItem Content="ListBoxItem"/>
             <ListBoxItem Content="ListBoxItem"/>
         </ListBox>
+        <RichTextBox x:Name="richTextBox" HorizontalAlignment="Left" Margin="75,120,0,5" Width="165">
+            <FlowDocument>
+                <Paragraph>
+                    <Run Text="RichTextBox"/>
+                    <Image Source="avatar_icon1.PNG"></Image>
+                    <Run Text="RichTextBox"/>
+                </Paragraph>
+            </FlowDocument>
+        </RichTextBox>
     </Grid>
 </Window>

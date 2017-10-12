@@ -8,13 +8,31 @@
         Title="TalkWin" Height="405" Width="453">
     <Window.Resources>
         <DataTemplate x:Key="dt_listboxitem">
-            <Grid>
+            <Grid Margin="5, 0, 0, 0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
-                <TextBox Grid.Row="0" Text="1111"></TextBox>
-                <TextBox Grid.Row="1" Text="222"></TextBox>
+                <TextBlock Grid.Row="0" Text="1111"></TextBlock>
+                <!--<TextBlock Grid.Row="1" Width="{Binding ElementName=content, Path=ActualWidth}" Text="22222dfffffffffadewrwerwer
+                           werwerwerwerewrewrewrewrwerwerewewrwerwerwerewrewrewrwerwerwerewrweerfffffffffffffffffffffffffffffffffff
+                           fffffffffffffffffffffffffffffffffffjjj" TextWrapping="Wrap"></TextBlock>-->
+                <Border Grid.Row="1" CornerRadius="3"  Width="{Binding ElementName=content, Path=ActualWidth}" BorderBrush="#FFF1D9D9" Background="#FF836969">
+                    <RichTextBox x:Name="richTextBox" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}">
+                        <FlowDocument>
+                            <Paragraph>
+                                <Run Text="RichTextBox"/>
+                                <Run Text="RichTextBox"/>
+                                <Image Source="avatar_icon1.PNG" Width="60" Height="60"></Image>
+                                <Run Text="Rich"/>
+                                <Run Text="RichTextBox"/>
+                                <Run Text="RichTextBox"/>
+                                <Run Text="RichTextBox"/>
+                                <Image Source="avatar_icon1.PNG" Width="20" Height="20"></Image>
+                            </Paragraph>
+                        </FlowDocument>
+                    </RichTextBox>
+                </Border>
             </Grid>
         </DataTemplate>
         <Style x:Key="style_listboxitem" TargetType="{x:Type ListBoxItem}">
@@ -26,8 +44,8 @@
                                 <ColumnDefinition Width="60"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="avatar_icon1.PNG"></Image>
-                            <Grid Grid.Column="1">
+                            <Image Grid.Column="0" Source="avatar_icon1.PNG" VerticalAlignment="Top"></Image>
+                            <Grid Name="content" Grid.Column="1">
                                 <ContentPresenter ContentSource="Content" ContentTemplate="{StaticResource dt_listboxitem}"></ContentPresenter>
                             </Grid>
                         </Grid>
