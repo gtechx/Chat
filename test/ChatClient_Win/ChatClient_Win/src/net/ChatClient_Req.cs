@@ -53,5 +53,60 @@ namespace GTech.Net
             
             tcpClient.Send(tickData);
         }
+
+        public void ReqFriendList()
+        {
+
+        }
+
+        public void ReqFriendAdd(ulong uid)
+        {
+
+        }
+
+        public void AgreeFriendAdd(ulong uid)
+        {
+
+        }
+
+        public void ReqFriendDel(ulong uid)
+        {
+
+        }
+
+        public void ReqUserToBlack(ulong uid)
+        {
+
+        }
+
+        public void ReqRemoveUserInBlack(ulong uid)
+        {
+
+        }
+
+        public void ReqMoveFriendToGroup(ulong uid)
+        {
+
+        }
+
+        public void ReqSetFriendVerifyType()
+        {
+
+        }
+
+        public void SendMessageToUser(ulong uid)
+        {
+
+        }
+
+        public void ReqUserInfo(ulong uid)
+        {
+
+        }
+
+        public void ReqUserSearch(ulong uid)
+        {
+
+        }
     }
 }

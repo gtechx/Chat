@@ -55,6 +55,12 @@ namespace GTech.Net.Protocol
         MsgId_Message,
         MsgId_RetMessage,
 
+        MsgId_ReqUserInfo,
+        MsgId_RetUserInfo,
+
+        MsgId_ReqUserSearch,
+        MsgId_RetUserSearch,
+
         MsgId_End,
     };
 

@@ -5,30 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient_Win"
         mc:Ignorable="d"
-        Title="TalkWin" Height="405" Width="453">
+        Title="TalkWin" Height="405" Width="424">
     <Window.Resources>
         <DataTemplate x:Key="dt_listboxitem">
-            <Grid Margin="5, 0, 0, 0">
+            <Grid Margin="5,0,0,0" x:Name="Parent">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Text="1111"></TextBlock>
+                <TextBlock Grid.Row="0" Text="{Binding}"></TextBlock>
                 <!--<TextBlock Grid.Row="1" Width="{Binding ElementName=content, Path=ActualWidth}" Text="22222dfffffffffadewrwerwer
                            werwerwerwerewrewrewrewrwerwerewewrwerwerwerewrewrewrwerwerwerewrweerfffffffffffffffffffffffffffffffffff
                            fffffffffffffffffffffffffffffffffffjjj" TextWrapping="Wrap"></TextBlock>-->
-                <Border Grid.Row="1" CornerRadius="3"  Width="{Binding ElementName=content, Path=ActualWidth}" BorderBrush="#FFF1D9D9" Background="#FF836969">
-                    <RichTextBox x:Name="richTextBox" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}">
+                <Border Grid.Row="1" CornerRadius="3" BorderBrush="#FFF1D9D9" Background="#FF836969">
+                    <RichTextBox Width="{Binding ElementName=Parent, Path=ActualWidth}" x:Name="richTextBox" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}">
                         <FlowDocument>
                             <Paragraph>
-                                <Run Text="RichTextBox"/>
-                                <Run Text="RichTextBox"/>
-                                <Image Source="avatar_icon1.PNG" Width="60" Height="60"></Image>
-                                <Run Text="Rich"/>
-                                <Run Text="RichTextBox"/>
-                                <Run Text="RichTextBox"/>
-                                <Run Text="RichTextBox"/>
-                                <Image Source="avatar_icon1.PNG" Width="20" Height="20"></Image>
+                                <Span>
+                                    RichText\\r\\nBox
+                                    <Image Source="avatar_icon1.PNG" Width="60" Height="60"></Image>
+                                    RichTextBoxRichRichTextBox
+                                    <Image Source="avatar_icon1.PNG" Width="20" Height="20"></Image> RichTextBox
+                                </Span>
                             </Paragraph>
                         </FlowDocument>
                     </RichTextBox>
@@ -39,13 +37,13 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type ListBoxItem}">
-                        <Grid>
+                        <Grid Margin="0,0,0,5">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="60"></ColumnDefinition>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Source="avatar_icon1.PNG" VerticalAlignment="Top"></Image>
-                            <Grid Name="content" Grid.Column="1">
+                            <Image Grid.Column="0" Source="avatar_icon1.PNG" VerticalAlignment="Top" Width="40" Height="40"></Image>
+                            <Grid Grid.Column="1">
                                 <ContentPresenter ContentSource="Content" ContentTemplate="{StaticResource dt_listboxitem}"></ContentPresenter>
                             </Grid>
                         </Grid>
@@ -55,16 +53,21 @@
         </Style>
         <DataTemplate x:Key="dt_talk">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22*"/>
+                    <ColumnDefinition Width="13*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="150"></RowDefinition>
                 </Grid.RowDefinitions>
-                <ListBox Grid.Row="0" BorderBrush="{x:Null}" ItemContainerStyle="{StaticResource style_listboxitem}">
+                <ListBox Grid.Row="0" BorderBrush="{x:Null}" ItemContainerStyle="{StaticResource style_listboxitem}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.ColumnSpan="2">
+                    <ListBoxItem Content="aaa"></ListBoxItem>
                     <ListBoxItem Content="aaa"></ListBoxItem>
                 </ListBox>
-                <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="2"></GridSplitter>
-                <Grid Grid.Row="2">
+                <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="2" Grid.ColumnSpan="2"></GridSplitter>
+                <Grid Grid.Row="2" Grid.ColumnSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="20"></RowDefinition>
                         <RowDefinition Height="*"></RowDefinition>
