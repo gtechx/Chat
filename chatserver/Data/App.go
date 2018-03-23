@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	//"errors"
@@ -14,7 +14,7 @@ import (
 //[hset]app:aid:uid:config
 
 //app op
-func (this *redisDataManager) createApp(uid uint64, name, password, desc, iconurl string) int {
+func (this *RedisDataManager) createApp(uid uint64, name, password, desc, iconurl string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -42,7 +42,7 @@ func (this *redisDataManager) createApp(uid uint64, name, password, desc, iconur
 	return ERR_NONE
 }
 
-func (this *redisDataManager) deleteApp(uid uint64, name string) int {
+func (this *RedisDataManager) deleteApp(uid uint64, name string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -70,7 +70,7 @@ func (this *redisDataManager) deleteApp(uid uint64, name string) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) setAppOnline(appname string) int {
+func (this *RedisDataManager) setAppOnline(appname string) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -87,7 +87,7 @@ func (this *redisDataManager) setAppOnline(appname string) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) setAppOffline(appname string) {
+func (this *RedisDataManager) setAppOffline(appname string) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -102,7 +102,7 @@ func (this *redisDataManager) setAppOffline(appname string) {
 	}
 }
 
-func (this *redisDataManager) createAppUser(puid uint64, appname, nickname, password, regip string) (int, uint64) {
+func (this *RedisDataManager) createAppUser(puid uint64, appname, nickname, password, regip string) (int, uint64) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -131,7 +131,7 @@ func (this *redisDataManager) createAppUser(puid uint64, appname, nickname, pass
 	return ERR_NONE, uid
 }
 
-func (this *redisDataManager) isAppUser(appname string, uid uint64) bool {
+func (this *RedisDataManager) isAppUser(appname string, uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
@@ -145,7 +145,7 @@ func (this *redisDataManager) isAppUser(appname string, uid uint64) bool {
 	return Bool(ret)
 }
 
-func (this *redisDataManager) checkAppLogin(appname, password string) int {
+func (this *RedisDataManager) checkAppLogin(appname, password string) int {
 	if password == "" {
 		return ERR_PASSWORD_INVALID
 	}
@@ -181,7 +181,7 @@ func (this *redisDataManager) checkAppLogin(appname, password string) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) setAppVerifyData(uuid string, uid uint64) int {
+func (this *RedisDataManager) setAppVerifyData(uuid string, uid uint64) int {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 	_, err := conn.Do("SET", uuid, uid, "EX", 30)
@@ -194,7 +194,7 @@ func (this *redisDataManager) setAppVerifyData(uuid string, uid uint64) int {
 	return ERR_NONE
 }
 
-func (this *redisDataManager) verifyAppLoginData(uuid string, uid uint64) bool {
+func (this *RedisDataManager) verifyAppLoginData(uuid string, uid uint64) bool {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 	ret, err := conn.Do("GET", uuid)
