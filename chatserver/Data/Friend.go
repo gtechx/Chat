@@ -1,9 +1,6 @@
 package data
 
 import (
-	//"errors"
-	"fmt"
-
 	"github.com/garyburd/redigo/redis"
 	. "github.com/nature19862001/base/common"
 )
@@ -127,38 +124,26 @@ func (this *RedisDataManager) MoveFriendToGroup(uid, otheruid uint64, srcgroup, 
 	return err
 }
 
-func (this *RedisDataManager) BanFriend(uid, fuid uint64) {
+// func (this *RedisDataManager) BanFriend(uid, fuid uint64) {
 
+// }
+
+// func (this *RedisDataManager) UnBanFriend(uid, fuid uint64) {
+
+// }
+
+func (this *RedisDataManager) SetFriendVerifyType(uid uint64, vtype byte) error {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	_, err := conn.Do("HSET", uid, "verifytype", vtype)
+	return err
 }
 
-func (this *RedisDataManager) UnBanFriend(uid, fuid uint64) {
-
-}
-
-func (this *RedisDataManager) SetFriendVerifyType(uid uint64, vtype byte) int {
+func (this *RedisDataManager) GetFriendVerifyType(uid uint64) (byte, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("HSET", uid, "vtype", vtype)
+	ret, err := conn.Do("HGET", uid, "verifytype")
 
-	if err != nil {
-		fmt.Println("setFriendVerifyType error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
-}
-
-func (this *RedisDataManager) GetFriendVerifyType(uid uint64) byte {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	ret, err := conn.Do("HGET", uid, "vtype")
-
-	if err != nil {
-		fmt.Println("getFriendVerifyType error:", err.Error())
-		return VERIFY_TYPE_ERR
-	}
-
-	return Byte(ret)
+	return Byte(ret), err
 }

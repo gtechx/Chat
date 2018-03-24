@@ -1,12 +1,9 @@
 package data
 
 import (
-	//"errors"
-	"fmt"
-	//"github.com/garyburd/redigo/redis"
-	. "github.com/nature19862001/base/common"
-	//"strings"
 	"time"
+	
+	. "github.com/nature19862001/base/common"
 )
 
 //[set]app aid set
@@ -14,199 +11,49 @@ import (
 //[hset]app:aid:uid:config
 
 //app op
-func (this *RedisDataManager) createApp(uid uint64, name, password, desc, iconurl string) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	ret, err := conn.Do("SISMEMBER", "app", name)
-
-	if err != nil {
-		fmt.Println("createApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	if Bool(ret) {
-		return ERR_APP_EXIST
-	}
-
-	conn.Send("SADD", "app", name)
-	conn.Send("HMSET", "app:"+name, "password", password, "desc", desc, "iconurl", iconurl, "regdate", time.Now().Unix(), "maxfriends", 1000)
-
-	_, err = conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("createApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
-}
-
-func (this *RedisDataManager) deleteApp(uid uint64, name string) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	ret, err := conn.Do("SISMEMBER", "app", name)
-
-	if err != nil {
-		fmt.Println("deleteApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	if !Bool(ret) {
-		return ERR_APP_NOT_EXIST
-	}
-
-	conn.Send("SREM", "app", name)
-	conn.Send("DEL", "app:"+name)
-
-	_, err = conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("deleteApp error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
-}
-
-func (this *RedisDataManager) setAppOnline(appname string) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	conn.Send("MULTI")
-	conn.Send("HSET", "app:"+appname, "online", serverAddr)
-	conn.Send("SADD", "app:online", appname)
-
-	_, err := conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("setAppOnline error:", err.Error())
-		return ERR_REDIS
-	}
-	return ERR_NONE
-}
-
-func (this *RedisDataManager) setAppOffline(appname string) {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-
-	conn.Send("MULTI")
-	conn.Send("HDEL", "app:"+appname, "online")
-	conn.Send("SREM", "app:online", appname)
-
-	_, err := conn.Do("EXEC")
-
-	if err != nil {
-		fmt.Println("setAppOffline error:", err.Error())
-	}
-}
-
-func (this *RedisDataManager) createAppUser(puid uint64, appname, nickname, password, regip string) (int, uint64) {
+func (this *RedisDataManager) CreateApp(uid uint64, name string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
 	ret, err := conn.Do("INCR", "UID")
 
 	if err != nil {
-		fmt.Println("createAppUser error:", err.Error())
-		return ERR_REDIS, 0
+		return err
 	}
 
-	uid := Uint64(ret)
+	appid := Uint64(ret)
 
 	conn.Send("MULTI")
-	conn.Send("HMSET", uid, "nickname", nickname, "password", password, "regip", regip, "regdate", time.Now().Unix(), "maxfriends", 1000, "headurl", "", "desc", "", "app", appname, "parent", puid)
-	conn.Send("SADD", "fgroup:"+String(uid), defaultGroupName)
-	conn.Send("SADD", "user:"+appname, uid)
-	conn.Send("SADD", "app:user", uid)
+	conn.Send("SADD", "app", appid)
+	conn.Send("SADD", "app:"+String(uid), appid)
+	conn.Send("HMSET", "app:"+String(uid)+":"+String(appid), "owner", uid, "desc", "", "iconurl", "", "regdate", time.Now().Unix())
 
 	_, err = conn.Do("EXEC")
 
-	if err != nil {
-		fmt.Println("createAppUser error:", err.Error())
-		return ERR_REDIS, 0
-	}
-
-	return ERR_NONE, uid
+	return err
 }
 
-func (this *RedisDataManager) isAppUser(appname string, uid uint64) bool {
+func (this *RedisDataManager) DeleteApp(uid, appid uint64) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SISMEMBER", "user:"+appname, uid)
+	conn.Send("MULTI")
+	conn.Send("SREM", "app", appid)
+	conn.Send("SREM", "app:"+String(uid), appid)
+	conn.Send("DEL", "app:"+String(uid)+":"+String(appid))
 
-	if err != nil {
-		fmt.Println("isAppUser error:", err.Error())
-		return false
-	}
+	_, err := conn.Do("EXEC")
 
-	return Bool(ret)
+	return err
 }
 
-func (this *RedisDataManager) checkAppLogin(appname, password string) int {
-	if password == "" {
-		return ERR_PASSWORD_INVALID
-	}
+func (this *RedisDataManager) IsAppExists(appid uint64) (bool, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	fmt.Println("checkAppLogin:", password, appname)
-	// ret, err := conn.Do("HGET", uid, "password")
 
-	// if err != nil {
-	// 	fmt.Println("checkAppLogin error:", err.Error())
-	// 	return ERR_REDIS
-	// }
+	ret, err := conn.Do("SISMEMBER", "app", appid)
 
-	// if ret == nil {
-	// 	return ERR_USER_NOT_EXIST
-	// }
-
-	// if String(ret) != password {
-	// 	return ERR_PASSWORD_INVALID
-	// }
-
-	// ret, err = conn.Do("SISMEMBER", "app", appname)
-
-	// if err != nil {
-	// 	fmt.Println("checkAppLogin error:", err.Error())
-	// 	return ERR_REDIS
-	// }
-
-	// if ret == nil {
-	// 	return ERR_APP_NOT_EXIST
-	// }
-
-	return ERR_NONE
+	return Bool(ret), err
 }
 
-func (this *RedisDataManager) setAppVerifyData(uuid string, uid uint64) int {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-	_, err := conn.Do("SET", uuid, uid, "EX", 30)
 
-	if err != nil {
-		fmt.Println("setAppVerifyData error:", err.Error())
-		return ERR_REDIS
-	}
-
-	return ERR_NONE
-}
-
-func (this *RedisDataManager) verifyAppLoginData(uuid string, uid uint64) bool {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-	ret, err := conn.Do("GET", uuid)
-
-	if err != nil {
-		fmt.Println("setAppVerifyData error:", err.Error())
-		return false
-	}
-
-	if ret == nil {
-		return false
-	}
-
-	return Uint64(ret) == uid
-}

@@ -71,7 +71,7 @@ func (this *RedisDataManager) GetUserOnline() ([]uint64, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err = conn.Do("SMEMBERS", "online")
+	ret, err := conn.Do("SMEMBERS", "online")
 
 	if err != nil {
 		return nil, err

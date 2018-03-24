@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/nature19862001/Chat/chatserver/Config"
 	. "github.com/nature19862001/base/common"
 )
 
@@ -44,6 +45,20 @@ func (this *RedisDataManager) Initialize() error {
 		}
 	}
 
+	ret, err = conn.Do("EXISTS", "APPID")
+
+	if err != nil {
+		return err
+	}
+
+	if !Bool(ret) {
+		_, err = conn.Do("SET", "APPID", 10000)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	ret, err = conn.Do("HEXISTS", "admin", 0)
 
 	if err != nil {
@@ -68,7 +83,7 @@ func (this *RedisDataManager) Initialize() error {
 }
 
 func redisDial() (redis.Conn, error) {
-	c, err := redis.Dial("tcp", redisAddr)
+	c, err := redis.Dial("tcp", config.RedisAddr)
 	if err != nil {
 		return nil, err
 	}

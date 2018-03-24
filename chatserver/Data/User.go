@@ -3,6 +3,7 @@ package data
 import (
 	"time"
 
+	"github.com/nature19862001/Chat/chatserver/Config"
 	. "github.com/nature19862001/base/common"
 )
 
@@ -81,7 +82,7 @@ func (this *RedisDataManager) SetUserOnline(uid uint64) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 	conn.Send("MULTI")
-	conn.Send("HSET", uid, "online", serverAddr)
+	conn.Send("HSET", uid, "online", config.ServerAddr)
 	conn.Send("SADD", "online", uid)
 	_, err := conn.Do("EXEC")
 	return err
@@ -104,20 +105,20 @@ func (this *RedisDataManager) SetUserState(uid uint64, state uint8) error {
 func (this *RedisDataManager) AddUserToBlack(uid, otheruid uint64) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.conn("SADD", "black:"+String(uid), otheruid)
+	_, err := conn.Do("SADD", "black:"+String(uid), otheruid)
 	return err
 }
 
 func (this *RedisDataManager) RemoveUserFromBlack(uid, otheruid uint64) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.conn("SREM", "black:"+String(uid), otheruid)
+	_, err := conn.Do("SREM", "black:"+String(uid), otheruid)
 	return err
 }
 
-func (this *RedisDataManager) IsUserInBlack(uid, otheruid uint64) bool {
+func (this *RedisDataManager) IsUserInBlack(uid, otheruid uint64) (bool, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SISMEMBER", "black:"+String(uid), otheruid)
-	return err
+	ret, err := conn.Do("SISMEMBER", "black:"+String(uid), otheruid)
+	return Bool(ret), err
 }
