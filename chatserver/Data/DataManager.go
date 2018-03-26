@@ -1,6 +1,7 @@
-package data
+package cdata
 
 import (
+	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -38,7 +39,7 @@ func (this *RedisDataManager) Initialize() error {
 	}
 
 	if !Bool(ret) {
-		_, err = conn.Do("SET", "UID", 10000)
+		_, err = conn.Do("SET", "UID", config.StartUID)
 
 		if err != nil {
 			return err
@@ -52,7 +53,7 @@ func (this *RedisDataManager) Initialize() error {
 	}
 
 	if !Bool(ret) {
-		_, err = conn.Do("SET", "APPID", 10000)
+		_, err = conn.Do("SET", "APPID", config.StartAPPID)
 
 		if err != nil {
 			return err
@@ -104,4 +105,17 @@ func redisOnBorrow(c redis.Conn, t time.Time) error {
 	}
 	_, err := c.Do("PING")
 	return err
+}
+
+func keyJoin(params ...interface{}) string {
+	var builder strings.Builder
+	count := len(params)
+	for i := 0; i < count; i++ {
+		param := params[i]
+		builder.WriteString(String(param))
+		if i != (count - 1) {
+			builder.WriteString(":")
+		}
+	}
+	return builder.String()
 }

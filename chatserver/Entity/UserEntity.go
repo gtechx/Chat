@@ -1,4 +1,4 @@
-package entity
+package centity
 
 import (
 	"fmt"
@@ -12,14 +12,42 @@ type UserEntity struct {
 	id   uint64
 	uid  uint64
 	appid uint64
+	zone uint32
 	conn gtnet.IConn
 
 	recvChan chan []byte
 	quitChan chan int
+
+	EntityKey
+}
+
+func keyJoin(params ...interface{}) string {
+	var builder strings.Builder
+	count := len(params)
+	for i := 0; i < count; i++ {
+		param := params[i]
+		builder.WriteString(String(param))
+		if i != (count - 1) {
+			builder.WriteString(":")
+		}
+	}
+	return builder.String()
 }
 
 func newUserEntity(entity IEntity) *UserEntity {
-	return &UserEntity{id: entity.ID(), uid: entity.UID(), appid: entity.APPID(), conn: entity.Conn()}
+	newentity := &UserEntity{id: entity.ID(), uid: entity.UID(), appid: entity.APPID(), zone: entity.ZONE(), conn: entity.Conn(), EntityKey:EntityKey{}}
+	newentity.init()
+	return newentity
+}
+
+func (this *UserEntity) init() {
+	this.KeyUID            = keyJoin(this.uid)
+	this.KeyAppData        = keyJoin("appdata", this.appid, this.zone, this.uid)
+	this.KeyGroup          = keyJoin("group", this.appid, this.zone, this.uid)
+	this.KeyFriend         = keyJoin("friend", this.appid, this.zone, this.uid)
+	this.KeyFriendRequest  = keyJoin("friend", "request", this.appid, this.zone, this.uid)
+	this.KeyBlack          = keyJoin("black", this.appid, this.zone, this.uid)
+	this.KeyMessageOffline = keyJoin("message", "offline", this.appid, this.zone, this.uid)
 }
 
 func (this *UserEntity) ID() uint64 {
@@ -32,6 +60,10 @@ func (this *UserEntity) UID() uint64 {
 
 func (this *UserEntity) APPID() uint64 {
 	return this.appid
+}
+
+func (this *NullEntity) ZONE() uint32 {
+	return this.zone
 }
 
 func (this *UserEntity) Conn() gtnet.IConn {

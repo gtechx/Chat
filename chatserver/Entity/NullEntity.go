@@ -1,4 +1,4 @@
-package entity
+package centity
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ type NullEntity struct {
 	id   uint64
 	uid  uint64
 	appid uint64
+	zone uint32
 	conn gtnet.IConn
 
 	recvChan chan []byte
@@ -39,6 +40,10 @@ func (this *NullEntity) UID() uint64 {
 
 func (this *NullEntity) APPID() uint64 {
 	return this.appid
+}
+
+func (this *NullEntity) ZONE() uint32 {
+	return this.zone
 }
 
 func (this *NullEntity) Conn() gtnet.IConn {
@@ -93,7 +98,8 @@ func (this *NullEntity) process(data []byte) bool {
 	case SMALL_MSG_ID_LOGIN:
 		uid := Uint64(data[2:10])
 		appid := Uint64(data[10:18])
-		password := string(data[18:])
+		zone := Uint32(data[18:22])
+		password := string(data[22:])
 
 		code := gDataManager.checkLogin(uid, password)
 
@@ -102,7 +108,8 @@ func (this *NullEntity) process(data []byte) bool {
 			if code == ERR_NONE {
 				this.uid = uid
 				this.appid = appid
-				Manager().CreateNullEntity(this)
+				this.zone = zone
+				Manager().CreateEntity(TYPE_USER, this)
 				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 			}
 		}

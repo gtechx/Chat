@@ -1,56 +1,57 @@
-package data
+package cdata
 
 import (
 	"github.com/garyburd/redigo/redis"
+	"github.com/nature19862001/Chat/chatserver/Entity"
 	. "github.com/nature19862001/base/common"
 )
 
 var defaultGroupName string = "我的好友"
 var userOnlineKeyName string = "user:online"
 
-func (this *RedisDataManager) AddFriendRequest(uid, otheruid uint64, group string) error {
+func (this *RedisDataManager) AddFriendRequest(entity centity.UserEntity, otheruid uint64, group string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("HSET", "friend:request:"+String(uid), otheruid, group)
+	_, err := conn.Do("HSET", entity.KeyFriendRequest, otheruid, group)
 	return err
 }
 
-func (this *RedisDataManager) RemoveFriendRequest(uid, otheruid uint64) error {
+func (this *RedisDataManager) RemoveFriendRequest(entity centity.UserEntity, otheruid uint64) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("HDEL", "friend:request:"+String(uid), otheruid)
+	_, err := conn.Do("HDEL", entity.KeyFriendRequest, otheruid)
 	return err
 }
 
-func (this *RedisDataManager) AddFriend(uid, otheruid uint64, group string) error {
+func (this *RedisDataManager) AddFriend(entity centity.UserEntity, otheruid uint64, group string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
 	conn.Send("MULTI")
-	conn.Send("HSET", "friend:"+String(uid), otheruid, group)
-	conn.Send("SADD", "group:"+String(uid)+":"+group, otheruid)
+	conn.Send("HSET", entity.KeyFriend, otheruid, group)
+	conn.Send("SADD", entity.KeyGroup+":"+group, otheruid)
 	_, err := conn.Do("EXEC")
 
 	return err
 }
 
-func (this *RedisDataManager) RemoveFriend(uid, otheruid uint64, group string) error {
+func (this *RedisDataManager) RemoveFriend(entity centity.UserEntity, otheruid uint64, group string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
 	conn.Send("MULTI")
-	conn.Send("HDEL", "friend:"+String(uid), otheruid)
-	conn.Send("SREM", "group:"+String(uid)+":"+group, otheruid)
+	conn.Send("HDEL", entity.KeyFriend, otheruid)
+	conn.Send("SREM", entity.KeyGroup+":"+group, otheruid)
 	_, err := conn.Do("EXEC")
 
 	return err
 }
 
-func (this *RedisDataManager) GetFriendList(uid uint64, group string) ([]uint64, error) {
+func (this *RedisDataManager) GetFriendList(entity centity.UserEntity, group string) ([]uint64, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SMEMBERS", "group:"+String(uid)+":"+group)
+	ret, err := conn.Do("SMEMBERS", entity.KeyGroup+":"+group)
 
 	if err != nil {
 		return nil, err
@@ -70,55 +71,55 @@ func (this *RedisDataManager) GetFriendList(uid uint64, group string) ([]uint64,
 	return userlist, err
 }
 
-func (this *RedisDataManager) IsFriend(uid, otheruid uint64) (bool, error) {
+func (this *RedisDataManager) IsFriend(entity centity.UserEntity, otheruid uint64) (bool, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	ret, err := conn.Do("HEXISTS", "friend:"+String(uid), otheruid)
+	ret, err := conn.Do("HEXISTS", entity.KeyFriend, otheruid)
 	return Bool(ret), err
 }
 
-func (this *RedisDataManager) GetGroupOfFriend(uid, otheruid uint64) (string, error) {
+func (this *RedisDataManager) GetGroupOfFriend(entity centity.UserEntity, otheruid uint64) (string, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	ret, err := conn.Do("HGET", "friend:"+String(uid), otheruid)
+	ret, err := conn.Do("HGET", entity.KeyFriend, otheruid)
 	return String(ret), err
 }
 
-func (this *RedisDataManager) AddGroup(uid uint64, group string) error {
+func (this *RedisDataManager) AddGroup(entity centity.UserEntity, group string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SADD", "group:"+String(uid), group)
+	_, err := conn.Do("SADD", entity.KeyGroup, group)
 	return err
 }
 
-func (this *RedisDataManager) RemoveGroup(uid uint64, group string) error {
+func (this *RedisDataManager) RemoveGroup(entity centity.UserEntity, group string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("SREM", "group:"+String(uid), group)
+	_, err := conn.Do("SREM", entity.KeyGroup, group)
 	return err
 }
 
-func (this *RedisDataManager) IsGroupExists(uid uint64, group string) (bool, error) {
+func (this *RedisDataManager) IsGroupExists(entity centity.UserEntity, group string) (bool, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	ret, err := conn.Do("SISMEMBER", "group:"+String(uid), group)
+	ret, err := conn.Do("SISMEMBER", entity.KeyGroup, group)
 	return Bool(ret), err
 }
 
-func (this *RedisDataManager) IsFriendInGroup(uid, otheruid uint64, group string) (bool, error) {
+func (this *RedisDataManager) IsFriendInGroup(entity centity.UserEntity, otheruid uint64, group string) (bool, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	ret, err := conn.Do("SISMEMBER", "group:"+String(uid)+":"+group, otheruid)
+	ret, err := conn.Do("SISMEMBER", entity.KeyGroup+":"+group, otheruid)
 	return Bool(ret), err
 }
 
-func (this *RedisDataManager) MoveFriendToGroup(uid, otheruid uint64, srcgroup, destgroup string) error {
+func (this *RedisDataManager) MoveFriendToGroup(entity centity.UserEntity, otheruid uint64, srcgroup, destgroup string) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
 	conn.Send("MULTI")
-	conn.Send("SREM", "group:"+String(uid)+":"+srcgroup, otheruid)
-	conn.Send("SADD", "group:"+String(uid)+":"+destgroup, otheruid)
+	conn.Send("SREM", entity.KeyGroup+":"+srcgroup, otheruid)
+	conn.Send("SADD", entity.KeyGroup+":"+destgroup, otheruid)
 	_, err := conn.Do("EXEC")
 
 	return err
@@ -132,18 +133,18 @@ func (this *RedisDataManager) MoveFriendToGroup(uid, otheruid uint64, srcgroup, 
 
 // }
 
-func (this *RedisDataManager) SetFriendVerifyType(uid uint64, vtype byte) error {
-	conn := this.redisPool.Get()
-	defer conn.Close()
-	_, err := conn.Do("HSET", uid, "verifytype", vtype)
-	return err
-}
+// func (this *RedisDataManager) SetFriendVerifyType(uid uint64, vtype byte) error {
+// 	conn := this.redisPool.Get()
+// 	defer conn.Close()
+// 	_, err := conn.Do("HSET", uid, "verifytype", vtype)
+// 	return err
+// }
 
-func (this *RedisDataManager) GetFriendVerifyType(uid uint64) (byte, error) {
-	conn := this.redisPool.Get()
-	defer conn.Close()
+// func (this *RedisDataManager) GetFriendVerifyType(uid uint64) (byte, error) {
+// 	conn := this.redisPool.Get()
+// 	defer conn.Close()
 
-	ret, err := conn.Do("HGET", uid, "verifytype")
+// 	ret, err := conn.Do("HGET", uid, "verifytype")
 
-	return Byte(ret), err
-}
+// 	return Byte(ret), err
+// }

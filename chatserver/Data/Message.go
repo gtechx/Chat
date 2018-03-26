@@ -1,80 +1,69 @@
-package data
+package cdata
 
 import (
 	//"errors"
-	"fmt"
 
 	"github.com/garyburd/redigo/redis"
 	. "github.com/nature19862001/base/common"
 )
 
-func (this *RedisDataManager) pullMsg(addr string, timeout int) []byte {
+func (this *RedisDataManager) PullOnlineMessage(serveraddr string, timeout int) ([]byte, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("BLPOP", "msg:"+addr, timeout)
+	ret, err := conn.Do("BLPOP", "message:"+serveraddr, timeout)
 
 	if err != nil {
-		fmt.Println("pullMsg error:", err.Error())
-		return nil
+		return nil, err
 	}
 
-	if ret == nil {
-		return nil
-	} else {
-		retarr, _ := redis.Values(ret, nil)
-		//fmt.Println(err.Error())
-		return Bytes(retarr[1])
+	retarr, err := redis.Values(ret, nil)
+
+	if err != nil {
+		return nil, err
 	}
+
+	return Bytes(retarr[1]), err
 }
 
-func (this *RedisDataManager) sendMsgToUser(uid uint64, data []byte) int {
+func (this *RedisDataManager) GetOfflineMessage(uid, appid uint64) ([][]byte, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	//check if friend is exist
-	ret, err := conn.Do("EXISTS", uid)
+	ret, err := conn.Do("LRANGE", "message:offline:"+String(uid)+":"+String(appid), 0, -1)
 
 	if err != nil {
-		fmt.Println("sendMsgToUser error:", err.Error())
-		return ERR_REDIS
+		return nil, err
 	}
 
-	if !Bool(ret) {
-		return ERR_USER_NOT_EXIST
-	}
-
-	ret, err = conn.Do("HGET", uid, "online")
+	retarr, err := redis.Values(ret, nil)
 
 	if err != nil {
-		fmt.Println("sendMsgToUser error:", err.Error())
-		return ERR_REDIS
+		return nil, err
 	}
 
-	data = append(Bytes(uid), data...)
-	//fmt.Println(data)
-	if ret != nil {
-		// if online
-		serveraddr := String(ret)
-		ret, err = conn.Do("RPUSH", "msg:"+serveraddr, data)
-
-		if err != nil {
-			fmt.Println("sendMsgToUser error:", err.Error())
-			return ERR_REDIS
-		}
-	} else {
-		//else not online
-		ret, err = conn.Do("RPUSH", "offline:"+String(uid), data)
-
-		if err != nil {
-			fmt.Println("sendMsgToUser error:", err.Error())
-			return ERR_REDIS
-		}
+	msglist := [][]byte{}
+	for i := 1; i < len(retarr); i++ {
+		msglist := append(msglist, Bytes(retarr[i]))
 	}
 
-	return ERR_NONE
+	return msglist, err
 }
 
-func (this *RedisDataManager) sendMsgToRoom() {
+func (this *RedisDataManager) SendMsgToUserOnline(uid, appid uint64, data []byte, serveraddr string) error {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	_, err := conn.Do("RPUSH", "message:"+serveraddr, data)
+	return err
+}
+
+func (this *RedisDataManager) SendMsgToUserOffline(uid, appid uint64, data []byte) error {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	_, err := conn.Do("RPUSH", "message:offline:"+String(uid)+":"+String(appid), data)
+	return err
+}
+
+func (this *RedisDataManager) SendMsgToRoom() {
 
 }

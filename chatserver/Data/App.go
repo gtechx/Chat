@@ -1,8 +1,9 @@
-package data
+package cdata
 
 import (
 	"time"
-	
+
+	"github.com/garyburd/redigo/redis"
 	. "github.com/nature19862001/base/common"
 )
 
@@ -56,4 +57,74 @@ func (this *RedisDataManager) IsAppExists(appid uint64) (bool, error) {
 	return Bool(ret), err
 }
 
+func (this *RedisDataManager) AddAppZone(appid uint64, zones ...uint32) error {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	ret, err := conn.Do("SADD", "app:zone:"+String(appid), zones)
+}
 
+func (this *RedisDataManager) IsUserApp(uid, appid uint64) (bool, error) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "app:"+String(uid), appid)
+
+	return Bool(ret), err
+}
+
+func (this *RedisDataManager) IsAppZone(appid uint64, zone uint32) (bool, error) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SISMEMBER", "app:zone:"+String(appid), zone)
+
+	return Bool(ret), err
+}
+
+func (this *RedisDataManager) AddShareApp(uid, appid, otherappid uint64) error {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	conn.Send("MULTI")
+	conn.Send("HMSET", "app:"+String(uid)+":"+String(appid), "share", otherappid)
+	conn.Send("SADD", "app:share:"+String(otherappid), appid)
+	_, err := conn.Do("EXEC")
+	return err
+}
+
+func (this *RedisDataManager) IsShareWithOtherApp(uid, appid uint64) (bool, error) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	ret, err := conn.Do("HEXISTS", "app:"+String(uid)+":"+String(appid), "share")
+	return Bool(ret), err
+}
+
+func (this *RedisDataManager) GetShareApp(appid uint64) (uint64, error) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+	ret, err := conn.Do("HGET", "app:"+String(uid)+":"+String(appid), "share")
+	return Uint64(ret), err
+}
+
+func (this *RedisDataManager) GetMyShareAppList(appid uint64) ([]uint64, error) {
+	conn := this.redisPool.Get()
+	defer conn.Close()
+
+	ret, err := conn.Do("SMEMBERS", "app:share:"+String(appid))
+
+	if err != nil {
+		return nil, err
+	}
+
+	retarr, err := redis.Values(ret, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	applist := []uint64{}
+	for _, otherappid := range retarr {
+		applist = append(applist, Uint64(otherappid))
+	}
+
+	return applist, err
+}

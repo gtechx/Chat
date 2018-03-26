@@ -1,4 +1,4 @@
-package entity
+package centity
 
 import "github.com/nature19862001/base/gtnet"
 
@@ -19,10 +19,10 @@ func init() {
 }
 
 type EntityManager struct {
-	nullEntityMap         map[uint64]IEntity
-	userIDEntityMap       map[uint64]IEntity
-	userAPPIDUIDEntityMap map[uint64]map[uint64]IEntity
-	curID                 uint64
+	nullEntityMap             map[uint64]IEntity
+	userIDEntityMap           map[uint64]IEntity
+	userAPPIDZONEUIDEntityMap map[uint64]map[uint32]map[uint64]IEntity
+	curID                     uint64
 
 	delChan chan IEntity
 	addChan chan IEntity
@@ -32,7 +32,7 @@ var instanceEntityManager *EntityManager
 
 func Manager() *EntityManager {
 	if instanceEntityManager == nil {
-		instanceEntityManager = &EntityManager{nullEntityMap: make(map[uint64]IEntity), userIDEntityMap: make(map[uint64]IEntity), userAPPIDUIDEntityMap: make(map[uint64]map[uint64]IEntity)}
+		instanceEntityManager = &EntityManager{nullEntityMap: make(map[uint64]IEntity), userIDEntityMap: make(map[uint64]IEntity), userAPPIDZONEUIDEntityMap: make(map[uint64]map[uint32]map[uint64]IEntity)}
 	}
 	return instanceEntityManager
 }
@@ -71,28 +71,35 @@ func (this *EntityManager) RemoveEntity(entity IEntity) {
 }
 
 func (this *EntityManager) doAddEntity(entity IEntity) {
-	oldentitymap, ok := this.userAPPIDUIDEntityMap[entity.APPID()]
 	eid := entity.ID()
 	uid := entity.UID()
-	if !ok {
-		this.userAPPIDUIDEntityMap[entity.APPID()] = make(map[uint64]IEntity)
-	} else {
-		oldentity, ok := oldentitymap[entity.UID()]
+	zone := entity.ZONE()
+	appid := entity.APPID()
 
-		if ok {
-			oldentityuid := entity.UID()
-			oldentityid := entity.ID()
+	oldappmap, ok := this.userAPPIDZONEUIDEntityMap[appid]
+
+	if !ok {
+		this.userAPPIDZONEUIDEntityMap[appid] = make(map[uint32]map[uint64]IEntity)
+		this.userAPPIDZONEUIDEntityMap[appid][zone] = make(map[uint64]IEntity)
+	} else {
+		oldzonemap, ok := oldappmap[uid]
+
+		if !ok {
+			this.userAPPIDZONEUIDEntityMap[appid][zone] = make(map[uint64]IEntity)
+		} else {
+			oldentity, ok := oldzonemap[uid]
 
 			if ok {
+				oldeid := oldentity.ID()
 				oldentity.ForceOffline()
-				delete(oldentitymap, oldentityuid)
-				delete(this.userIDEntityMap, eid)
+				delete(oldzonemap, uid)
+				delete(this.userIDEntityMap, oldeid)
 			}
 		}
 	}
 
-	userIDEntityMap[entity.ID()] = entity
-	userAPPIDUIDEntityMap[entity.APPID()][entity.UID()] = entity
+	userIDEntityMap[eid] = entity
+	userAPPIDZONEUIDEntityMap[appid][zone][uid] = entity
 	entity.start()
 }
 
@@ -110,32 +117,15 @@ func (this *EntityManager) userEntityProcess() {
 }
 
 func (this *EntityManager) doRemoveEntity(entity IEntity) {
-	entity, ok := this.userIDEntityMap[id]
+	eid := entity.ID()
+	uid := entity.UID()
+	zone := entity.ZONE()
+	appid := entity.APPID()
+
+	entity, ok := this.userIDEntityMap[eid]
 
 	if ok {
 		delete(this.userIDEntityMap, id)
-		delete(this.userAPPIDUIDEntityMap[entity.APPID()], entity.UID())
+		delete(this.userAPPIDZONEUIDEntityMap[appid][zone], uid)
 	}
 }
-
-// func (this *EntityManager) RemoveUserEntityByID(id uint64) {
-// 	entity, ok := this.userIDEntityMap[id]
-
-// 	if ok {
-// 		delete(this.userIDEntityMap, id)
-// 		delete(this.userAPPIDUIDEntityMap[entity.APPID()], entity.UID())
-// 	}
-// }
-
-// func (this *EntityManager) RemoveUserEntityByAPPIDUID(appid, uid uint64) {
-// 	entitymap, ok := this.userAPPIDUIDEntityMap[appid]
-
-// 	if ok {
-// 		entity, ok := entitymap[uid]
-
-// 		if ok {
-// 			delete(this.userIDEntityMap, entity.ID())
-// 			delete(entitymap, uid)
-// 		}
-// 	}
-// }

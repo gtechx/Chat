@@ -1,4 +1,4 @@
-package data
+package cdata
 
 import (
 	"github.com/garyburd/redigo/redis"
