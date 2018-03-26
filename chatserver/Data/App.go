@@ -27,7 +27,7 @@ func (this *RedisDataManager) CreateApp(uid uint64, name string) error {
 	conn.Send("MULTI")
 	conn.Send("SADD", "app", appid)
 	conn.Send("SADD", "app:"+String(uid), appid)
-	conn.Send("HMSET", "app:"+String(uid)+":"+String(appid), "owner", uid, "desc", "", "iconurl", "", "regdate", time.Now().Unix())
+	conn.Send("HMSET", "app:"+String(appid), "owner", uid, "desc", "", "iconurl", "", "regdate", time.Now().Unix())
 
 	_, err = conn.Do("EXEC")
 
@@ -60,16 +60,16 @@ func (this *RedisDataManager) IsAppExists(appid uint64) (bool, error) {
 func (this *RedisDataManager) AddAppZone(appid uint64, zones ...uint32) error {
 	conn := this.redisPool.Get()
 	defer conn.Close()
-	ret, err := conn.Do("SADD", "app:zone:"+String(appid), zones)
+	ret, err := conn.Do("HGET", "app:zone:"+String(appid), zones)
 }
 
-func (this *RedisDataManager) IsUserApp(uid, appid uint64) (bool, error) {
+func (this *RedisDataManager) GetAppOwner(appid uint64) (uint64, error) {
 	conn := this.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("SISMEMBER", "app:"+String(uid), appid)
+	ret, err := conn.Do("HGET", "app:"+String(appid), "owner")
 
-	return Bool(ret), err
+	return Uint64(ret), err
 }
 
 func (this *RedisDataManager) IsAppZone(appid uint64, zone uint32) (bool, error) {

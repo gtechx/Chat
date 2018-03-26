@@ -2,6 +2,7 @@ package centity
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/nature19862001/base/common"
@@ -9,11 +10,11 @@ import (
 )
 
 type UserEntity struct {
-	id   uint64
-	uid  uint64
+	id    uint64
+	uid   uint64
 	appid uint64
-	zone uint32
-	conn gtnet.IConn
+	zone  uint32
+	conn  gtnet.IConn
 
 	recvChan chan []byte
 	quitChan chan int
@@ -35,18 +36,19 @@ func keyJoin(params ...interface{}) string {
 }
 
 func newUserEntity(entity IEntity) *UserEntity {
-	newentity := &UserEntity{id: entity.ID(), uid: entity.UID(), appid: entity.APPID(), zone: entity.ZONE(), conn: entity.Conn(), EntityKey:EntityKey{}}
+	newentity := &UserEntity{id: entity.ID(), uid: entity.UID(), appid: entity.APPID(), zone: entity.ZONE(), conn: entity.Conn(), EntityKey: EntityKey{}}
 	newentity.init()
+	newentity.start()
 	return newentity
 }
 
 func (this *UserEntity) init() {
-	this.KeyUID            = keyJoin(this.uid)
-	this.KeyAppData        = keyJoin("appdata", this.appid, this.zone, this.uid)
-	this.KeyGroup          = keyJoin("group", this.appid, this.zone, this.uid)
-	this.KeyFriend         = keyJoin("friend", this.appid, this.zone, this.uid)
-	this.KeyFriendRequest  = keyJoin("friend", "request", this.appid, this.zone, this.uid)
-	this.KeyBlack          = keyJoin("black", this.appid, this.zone, this.uid)
+	this.KeyUID = keyJoin(this.uid)
+	this.KeyAppData = keyJoin("appdata", this.appid, this.zone, this.uid)
+	this.KeyGroup = keyJoin("group", this.appid, this.zone, this.uid)
+	this.KeyFriend = keyJoin("friend", this.appid, this.zone, this.uid)
+	this.KeyFriendRequest = keyJoin("friend", "request", this.appid, this.zone, this.uid)
+	this.KeyBlack = keyJoin("black", this.appid, this.zone, this.uid)
 	this.KeyMessageOffline = keyJoin("message", "offline", this.appid, this.zone, this.uid)
 }
 
@@ -62,7 +64,7 @@ func (this *UserEntity) APPID() uint64 {
 	return this.appid
 }
 
-func (this *NullEntity) ZONE() uint32 {
+func (this *UserEntity) ZONE() uint32 {
 	return this.zone
 }
 
@@ -73,7 +75,7 @@ func (this *UserEntity) Conn() gtnet.IConn {
 func (this *UserEntity) ForceOffline() {
 }
 
-func (this *UserEntity) RPC(firstmsgid uint8, secondmsgid uint8, params ...interface) {
+func (this *UserEntity) RPC(firstmsgid uint8, secondmsgid uint8, params ...interface{}) {
 	buff := []byte{}
 	buff = append(buff, Bytes(firstmsgid)...)
 	buff = append(buff, Bytes(secondmsgid)...)
@@ -81,7 +83,7 @@ func (this *UserEntity) RPC(firstmsgid uint8, secondmsgid uint8, params ...inter
 	for _, param := range params {
 		data := Bytes(param)
 		buff = append(buff, Bytes(uint8(len(data)))...) //param len
-		buff = append(buff, Bytes(param)...) //param data
+		buff = append(buff, Bytes(param)...)            //param data
 	}
 
 	this.conn.Send(append(Bytes(int16(len(buff))), buff...))
@@ -186,6 +188,7 @@ func (this *UserEntity) ParseMsg(data []byte) {
 	copy(newdata, data)
 	this.recvChan <- newdata
 }
+
 // IMsgParser end
 
 // IConnListener start
@@ -219,4 +222,5 @@ func (this *UserEntity) OnSendBusy([]byte) {
 	// p.conn.Send(Bytes(int16(len(str))))
 	// p.conn.Send([]byte(str))
 }
+
 // IConnListener end

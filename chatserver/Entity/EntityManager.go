@@ -6,7 +6,7 @@ var BigMsgIDCounter uint8 = 0
 var SmallMsgIDCounter uint8 = 0
 
 const (
-	BIG_MSG_ID_LOGIN uint8 = iota + 10000
+	BIG_MSG_ID_LOGIN uint8 = iota
 )
 
 const BIG_MSG_ID_START = BIG_MSG_ID_LOGIN
@@ -82,7 +82,7 @@ func (this *EntityManager) doAddEntity(entity IEntity) {
 		this.userAPPIDZONEUIDEntityMap[appid] = make(map[uint32]map[uint64]IEntity)
 		this.userAPPIDZONEUIDEntityMap[appid][zone] = make(map[uint64]IEntity)
 	} else {
-		oldzonemap, ok := oldappmap[uid]
+		oldzonemap, ok := oldappmap[zone]
 
 		if !ok {
 			this.userAPPIDZONEUIDEntityMap[appid][zone] = make(map[uint64]IEntity)
@@ -98,9 +98,8 @@ func (this *EntityManager) doAddEntity(entity IEntity) {
 		}
 	}
 
-	userIDEntityMap[eid] = entity
-	userAPPIDZONEUIDEntityMap[appid][zone][uid] = entity
-	entity.start()
+	this.userIDEntityMap[eid] = entity
+	this.userAPPIDZONEUIDEntityMap[appid][zone][uid] = entity
 }
 
 func (this *EntityManager) userEntityProcess() {
@@ -125,7 +124,7 @@ func (this *EntityManager) doRemoveEntity(entity IEntity) {
 	entity, ok := this.userIDEntityMap[eid]
 
 	if ok {
-		delete(this.userIDEntityMap, id)
+		delete(this.userIDEntityMap, eid)
 		delete(this.userAPPIDZONEUIDEntityMap[appid][zone], uid)
 	}
 }

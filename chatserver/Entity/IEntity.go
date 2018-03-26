@@ -10,7 +10,7 @@ type IEntity interface {
 	Conn() gtnet.IConn
 
 	ForceOffline()
-	RPC(firstmsgid uint8, secondmsgid uint8, params ...interface)
+	RPC(firstmsgid uint8, secondmsgid uint8, params ...interface{})
 }
 
 const (

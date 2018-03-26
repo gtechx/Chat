@@ -5,8 +5,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nature19862001/Chat/chatserver/Data"
 	. "github.com/nature19862001/base/common"
 	"github.com/nature19862001/base/gtnet"
+	"github.com/nature19862001/base/php"
 )
 
 const (
@@ -17,11 +19,11 @@ const (
 )
 
 type NullEntity struct {
-	id   uint64
-	uid  uint64
+	id    uint64
+	uid   uint64
 	appid uint64
-	zone uint32
-	conn gtnet.IConn
+	zone  uint32
+	conn  gtnet.IConn
 
 	recvChan chan []byte
 }
@@ -53,7 +55,7 @@ func (this *NullEntity) Conn() gtnet.IConn {
 func (this *NullEntity) ForceOffline() {
 }
 
-func (this *NullEntity) RPC(firstmsgid uint8, secondmsgid uint8, params ...interface) {
+func (this *NullEntity) RPC(firstmsgid uint8, secondmsgid uint8, params ...interface{}) {
 	buff := []byte{}
 	buff = append(buff, Bytes(firstmsgid)...)
 	buff = append(buff, Bytes(secondmsgid)...)
@@ -101,20 +103,44 @@ func (this *NullEntity) process(data []byte) bool {
 		zone := Uint32(data[18:22])
 		password := string(data[22:])
 
-		code := gDataManager.checkLogin(uid, password)
+		upass, err := cdata.Manager().GetPassword(uid)
 
-		if code == ERR_NONE {
-			code = gDataManager.setUserOnline(uid)
-			if code == ERR_NONE {
-				this.uid = uid
-				this.appid = appid
-				this.zone = zone
-				Manager().CreateEntity(TYPE_USER, this)
-				fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
-			}
+		if err != nil {
+			return false
 		}
-		result = code != ERR_NONE
+
+		if upass != password {
+			return false
+		}
+
+		flag, err := cdata.Manager().IsAppExists(appid)
+
+		if err != nil {
+			return false
+		}
+
+		if !flag {
+			return false
+		}
+
+		flag, err = cdata.Manager().IsAppZone(appid, zone)
+
+		if err != nil {
+			return false
+		}
+
+		if !flag {
+			return false
+		}
+
+		this.uid = uid
+		this.appid = appid
+		this.zone = zone
+		Manager().CreateEntity(TYPE_USER, this)
+		fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
+
 		this.RPC(BIG_MSG_ID_LOGIN, SMALL_MSG_ID_LOGIN, uint16(code))
+		return true
 	// case SMALL_MSG_ID_APP_LOGIN:
 	// 	appname := string(data[2:34])
 	// 	password := string(data[34:])
@@ -332,4 +358,3 @@ func Authcode(str string, args ...interface{}) string {
 		return keyc + php.Base64_encode(result) //php.Str_replace("=", "", php.Base64_encode(result)) //base64.StdEncoding.EncodeToString(byteresult)) //php.Base64_encode(result))
 	}
 }
-
