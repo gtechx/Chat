@@ -108,8 +108,50 @@ func (this *UserEntity) start() {
 	this.quitChan = make(chan int, 1)
 	this.conn.SetMsgParser(this)
 	this.conn.SetListener(this)
-
+	this.broadcastOnlineMsg()
 	go this.startProcess()
+}
+
+func (this *UserEntity) broadcastOnlineMsg() {
+	err := cdata.Manager().SetUserOffline(this)
+
+	if err != nil {
+		this.RPC(BIG_MSG_ID_ERR, SMALL_MSG_ID_ERR_REDIS)
+		return
+	}
+
+	grouplist, err := cdata.Manager().GetGroupList(this)
+
+	if err != nil {
+		this.RPC(BIG_MSG_ID_ERR, SMALL_MSG_ID_ERR_REDIS)
+		return
+	}
+
+	friendlist := []uint64{}
+
+	for _, group := range grouplist {
+		gfriendlist, err := cdata.Manager().GetFriendList(this, group)
+
+		if err != nil {
+			this.RPC(BIG_MSG_ID_ERR, SMALL_MSG_ID_ERR_REDIS)
+			return
+		}
+
+		friendlist = append(friendlist, gfriendlist...)
+	}
+
+	for _, fuid := range friendlist {
+		flag, err := cdata.Manager().IsUserOnline(fuid)
+		if err != nil {
+			this.RPC(BIG_MSG_ID_ERR, SMALL_MSG_ID_ERR_REDIS)
+			return
+		}
+
+		if flag {
+			//send online message to online friend
+			this.RPC(BIG_MSG_ID_USER, SMALL_MSG_ID_ONLINE, this.uid)
+		}
+	}
 }
 
 func (this *UserEntity) startProcess() {
@@ -144,7 +186,20 @@ end:
 }
 
 func (this *UserEntity) process(data []byte) bool {
-	msgid := Uint16(data)
+	bigmsgid := Uint8(data)
+	smallmsgid := Uint8(data[1:])
+
+	smallProcesser, ok := msgProcesser[bigmsgid]
+	if ok {
+		fn, ok := smallProcesser[smallmsgid]
+		if ok {
+			fn(this, data[2:])
+		} else {
+			fmt.Println("unknown smallmsgid:", smallmsgid)
+		}
+	} else {
+		fmt.Println("unknown bigmsgid:", bigmsgid)
+	}
 
 	switch msgid {
 	case MsgId_Tick:
@@ -163,7 +218,7 @@ func (this *UserEntity) process(data []byte) bool {
 		// ret.Data = data[2:]
 		this.send(data)
 	default:
-		fn, ok := msgProcesserMap[msgid]
+		fn, ok := msgProcesser[msgid]
 		if ok {
 			fn(this, data)
 		} else {

@@ -1,14 +1,13 @@
 package cdata
 
 import (
-	//"errors"
-
 	"github.com/garyburd/redigo/redis"
+	"github.com/nature19862001/Chat/chatserver/Entity"
 	. "github.com/nature19862001/base/common"
 )
 
-func (this *RedisDataManager) PullOnlineMessage(serveraddr string, timeout int) ([]byte, error) {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) PullOnlineMessage(serveraddr string, timeout int) ([]byte, error) {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 
 	ret, err := conn.Do("BLPOP", "message:"+serveraddr, timeout)
@@ -26,11 +25,11 @@ func (this *RedisDataManager) PullOnlineMessage(serveraddr string, timeout int) 
 	return Bytes(retarr[1]), err
 }
 
-func (this *RedisDataManager) GetOfflineMessage(uid, appid uint64) ([][]byte, error) {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) GetOfflineMessage(entity centity.UserEntity) ([][]byte, error) {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 
-	ret, err := conn.Do("LRANGE", "message:offline:"+String(uid)+":"+String(appid), 0, -1)
+	ret, err := conn.Do("LRANGE", entity.KeyMessageOffline, 0, -1)
 
 	if err != nil {
 		return nil, err
@@ -50,20 +49,20 @@ func (this *RedisDataManager) GetOfflineMessage(uid, appid uint64) ([][]byte, er
 	return msglist, err
 }
 
-func (this *RedisDataManager) SendMsgToUserOnline(uid, appid uint64, data []byte, serveraddr string) error {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) SendMsgToUserOnline(uid, appid uint64, data []byte, serveraddr string) error {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 	_, err := conn.Do("RPUSH", "message:"+serveraddr, data)
 	return err
 }
 
-func (this *RedisDataManager) SendMsgToUserOffline(uid, appid uint64, data []byte) error {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) SendMsgToUserOffline(entity centity.UserEntity, data []byte) error {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
-	_, err := conn.Do("RPUSH", "message:offline:"+String(uid)+":"+String(appid), data)
+	_, err := conn.Do("RPUSH", entity.KeyMessageOffline, data)
 	return err
 }
 
-func (this *RedisDataManager) SendMsgToRoom() {
+func (rdm *RedisDataManager) SendMsgToRoom() {
 
 }

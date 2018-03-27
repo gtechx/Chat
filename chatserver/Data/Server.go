@@ -12,24 +12,24 @@ import (
 var serverListKeyName string = "serverlist"
 
 //server op
-func (this *RedisDataManager) RegisterServer(addr string) error {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) RegisterServer(addr string) error {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 	_, err := conn.Do("ZADD", serverListKeyName, 0, addr)
 
 	return err
 }
 
-func (this *RedisDataManager) IncrByServerClientCount(addr string, count int) error {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) IncrByServerClientCount(addr string, count int) error {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 	_, err := conn.Do("ZINCRBY", serverListKeyName, count, addr)
 
 	return err
 }
 
-func (this *RedisDataManager) GetServerList() ([]string, error) {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) GetServerList() ([]string, error) {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 
 	ret, err := conn.Do("ZRANGE", serverListKeyName, 0, -1)
@@ -42,8 +42,8 @@ func (this *RedisDataManager) GetServerList() ([]string, error) {
 	return slist, err
 }
 
-func (this *RedisDataManager) GetServerCount() (int, error) {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) GetServerCount() (int, error) {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 
 	ret, err := conn.Do("ZCARD", serverListKeyName)
@@ -51,8 +51,8 @@ func (this *RedisDataManager) GetServerCount() (int, error) {
 	return Int(ret), err
 }
 
-func (this *RedisDataManager) SetServerTTL(addr string, seconds int) error {
-	conn := this.redisPool.Get()
+func (rdm *RedisDataManager) SetServerTTL(addr string, seconds int) error {
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 
 	_, err := conn.Do("SET", "ttl:"+addr, 0, "EX", seconds)
@@ -60,10 +60,10 @@ func (this *RedisDataManager) SetServerTTL(addr string, seconds int) error {
 	return err
 }
 
-func (this *RedisDataManager) CheckServerTTL() error {
+func (rdm *RedisDataManager) CheckServerTTL() error {
 	return nil
 }
 
-func (this *RedisDataManager) VoteServerDie() error {
+func (rdm *RedisDataManager) VoteServerDie() error {
 	return nil
 }

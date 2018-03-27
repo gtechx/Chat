@@ -123,19 +123,27 @@ func (this *NullEntity) process(data []byte) bool {
 			return false
 		}
 
-		flag, err = cdata.Manager().IsAppZone(appid, zone)
+		apptype, err := cdata.Manager().GetAppType(appid)
 
 		if err != nil {
 			return false
 		}
 
-		if !flag {
-			return false
+		if apptype == "game" {
+			flag, err = cdata.Manager().IsAppZone(appid, zone)
+
+			if err != nil {
+				return false
+			}
+
+			if !flag {
+				return false
+			}
+			this.zone = zone
 		}
 
 		this.uid = uid
 		this.appid = appid
-		this.zone = zone
 		Manager().CreateEntity(TYPE_USER, this)
 		fmt.Println("addr:" + this.conn.ConnAddr() + " logined success")
 

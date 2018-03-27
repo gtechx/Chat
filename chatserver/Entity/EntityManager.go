@@ -1,12 +1,23 @@
 package centity
 
-import "github.com/nature19862001/base/gtnet"
+import (
+	"fmt"
+
+	"github.com/nature19862001/Chat/chatserver/Data"
+	"github.com/nature19862001/base/gtnet"
+)
 
 var BigMsgIDCounter uint8 = 0
 var SmallMsgIDCounter uint8 = 0
 
 const (
-	BIG_MSG_ID_LOGIN uint8 = iota
+	BIG_MSG_ID_USER uint8 = iota
+	BIG_MSG_ID_ERR
+)
+
+const (
+	SMALL_MSG_ID_ERR_UNKNOWN = iota
+	SMALL_MSG_ID_ERR_REDIS
 )
 
 const BIG_MSG_ID_START = BIG_MSG_ID_LOGIN
@@ -127,4 +138,12 @@ func (this *EntityManager) doRemoveEntity(entity IEntity) {
 		delete(this.userIDEntityMap, eid)
 		delete(this.userAPPIDZONEUIDEntityMap[appid][zone], uid)
 	}
+}
+
+func (this *EntityManager) CleanOnlineUsers() {
+	for _, entity := range this.userIDEntityMap {
+		cdata.Manager().SetUserOffline(entity)
+	}
+
+	fmt.Println("cleanOnlineUsers end")
 }

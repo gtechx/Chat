@@ -1,9 +1,9 @@
 package main
 
 import (
-	//. "github.com/nature19862001/Chat/common"
-	//"github.com/nature19862001/base/gtnet"
 	"time"
+
+	"github.com/nature19862001/Chat/chatserver/Data"
 )
 
 func serverMonitorInit() {
@@ -15,6 +15,6 @@ func startServerMonitor() {
 
 	select {
 	case <-timer.C:
-		gDataManager.checkServerTTL()
+		cdata.Manager().CheckServerTTL()
 	}
 }

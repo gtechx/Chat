@@ -1,4 +1,4 @@
-package service
+package gtservice
 
 type IService interface {
 	Start() error

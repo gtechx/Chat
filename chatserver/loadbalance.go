@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	//. "github.com/nature19862001/Chat/common"
-	//"github.com/nature19862001/base/gtnet"
 	"encoding/json"
-	. "github.com/nature19862001/base/common"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/nature19862001/Chat/chatserver/Data"
+	. "github.com/nature19862001/base/common"
 )
 
 func loadBanlanceInit() {
@@ -23,7 +23,7 @@ func startHTTPServer() {
 }
 
 func getServerList(rw http.ResponseWriter, req *http.Request) {
-	serverlist := gDataManager.getServerList()
+	serverlist := cdata.Manager().GetServerList()
 
 	ret := "{\r\n\tserverlist:\r\n\t[\r\n"
 	for i := 0; i < len(serverlist); i++ {
@@ -59,7 +59,11 @@ func tokenVerify(rw http.ResponseWriter, req *http.Request) {
 		errmsg.ErrorCode = ERR_TIME_OUT
 		errmsg.ErrorMsg = "ERR_TIME_OUT"
 	} else {
-		if !gDataManager.isUserExist(uid) {
+		flag, err := cdata.Manager().IsUIDExists(uid)
+		if err != nil {
+			errmsg.ErrorCode = ERR_REDIS
+			errmsg.ErrorMsg = "ERR_REDIS"
+		} else if !flag {
 			errmsg.ErrorCode = ERR_USER_NOT_EXIST
 			errmsg.ErrorMsg = "ERR_USER_NOT_EXIST"
 		}
@@ -118,7 +122,7 @@ func register(rw http.ResponseWriter, req *http.Request) {
 	writeHeader(rw)
 
 	ret := "<form method=\"post\" action=\"/create\" onsubmit=\"return true;\">"
-	ret += "昵称：<input type=\"text\" name=\"nickname\" />"
+	ret += "账号：<input type=\"text\" name=\"account\" />"
 	ret += "<br/>"
 	ret += "密码：<input type=\"password\" name=\"password1\" oninput=\"document.getElementById('password').value = md5(this.value);\" onpropertychange=\"document.getElementById('password').value = md5(this.value);\" />"
 	ret += "<input type=\"hidden\" name=\"password\" id=\"password\" />"
@@ -134,7 +138,7 @@ func register(rw http.ResponseWriter, req *http.Request) {
 func create(rw http.ResponseWriter, req *http.Request) {
 	var ok bool
 	var uid uint64
-	nickname := req.PostFormValue("nickname")
+	account := req.PostFormValue("account")
 	password := req.PostFormValue("password")
 	regip := req.RemoteAddr
 	method := req.Method
@@ -152,7 +156,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		goto err
 	}
 
-	if nickname == "" {
+	if account == "" {
 		// ret := "{\r\n\terrorcode:1,\r\n"
 		// ret = "\r\n\terror:\"need nickname\",\r\n"
 		// ret += "}"
@@ -170,7 +174,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		goto err
 	}
 
-	ok, uid = gDataManager.createUser(nickname, password, regip)
+	ok, uid = cdata.Manager().CreateAccount(account, password, regip)
 
 	if !ok {
 		// ret := "{\r\n\terrorcode:3,\r\n"
@@ -185,11 +189,11 @@ func create(rw http.ResponseWriter, req *http.Request) {
 	// ret = "\r\n\terror:\"\",\r\n"
 	// ret = "\r\n\tuid:" + String(uid) + ",\r\n"
 	// ret += "}"
-	ret += "<span>注册成功，登录账号：" + String(uid) + "</span><br/>"
+	ret += "<span>注册成功，登录账号：" + account + "</span><br/>"
 	goto end
 err:
 	ret += "<form method=\"post\" action=\"/create\">"
-	ret += "昵称：<input type=\"text\" name=\"nickname\" />"
+	ret += "账号：<input type=\"text\" name=\"account\" />"
 	ret += "<br/>"
 	ret += "密码：<input type=\"password\" name=\"password1\" oninput=\"document.getElementById('password').value = md5(this.value);\" onpropertychange=\"document.getElementById('password').value = md5(this.value);\" />"
 	ret += "<input type=\"hidden\" name=\"password\" id=\"password\" />"

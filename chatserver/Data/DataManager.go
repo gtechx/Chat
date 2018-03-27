@@ -22,15 +22,15 @@ func Manager() *RedisDataManager {
 	return instanceDataManager
 }
 
-func (this *RedisDataManager) Initialize() error {
-	this.redisPool = &redis.Pool{
+func (rdm *RedisDataManager) Initialize() error {
+	rdm.redisPool = &redis.Pool{
 		MaxIdle:      3,
 		IdleTimeout:  240 * time.Second,
 		Dial:         redisDial,
 		TestOnBorrow: redisOnBorrow,
 	}
 
-	conn := this.redisPool.Get()
+	conn := rdm.redisPool.Get()
 	defer conn.Close()
 	ret, err := conn.Do("EXISTS", "UID")
 

@@ -7,74 +7,74 @@ import (
 )
 
 //room op
-func (this *RedisDataManager) createRoom() {
+func (rdm *RedisDataManager) createRoom() {
 
 }
 
-func (this *RedisDataManager) deleteRoom() {
+func (rdm *RedisDataManager) deleteRoom() {
 
 }
 
-func (this *RedisDataManager) getRoomList() {
+func (rdm *RedisDataManager) getRoomList() {
 
 }
 
-func (this *RedisDataManager) getRoomType() {
+func (rdm *RedisDataManager) getRoomType() {
 
 }
 
-func (this *RedisDataManager) getRoomPassword() {
+func (rdm *RedisDataManager) getRoomPassword() {
 
 }
 
-func (this *RedisDataManager) setRoomPassword() {
+func (rdm *RedisDataManager) setRoomPassword() {
 
 }
 
-func (this *RedisDataManager) isRoomExist() {
+func (rdm *RedisDataManager) isRoomExist() {
 
 }
 
-func (this *RedisDataManager) isUserInRoom() {
+func (rdm *RedisDataManager) isUserInRoom() {
 
 }
 
-func (this *RedisDataManager) addUserToRoom() {
+func (rdm *RedisDataManager) addUserToRoom() {
 
 }
 
-func (this *RedisDataManager) removeUserToRoom() {
+func (rdm *RedisDataManager) removeUserToRoom() {
 
 }
 
-func (this *RedisDataManager) banUserInRoom() {
+func (rdm *RedisDataManager) banUserInRoom() {
 
 }
 
-func (this *RedisDataManager) unBanUserInRoom() {
+func (rdm *RedisDataManager) unBanUserInRoom() {
 
 }
 
-func (this *RedisDataManager) setRoomDescription() {
+func (rdm *RedisDataManager) setRoomDescription() {
 
 }
 
-func (this *RedisDataManager) getRoomDescription() {
+func (rdm *RedisDataManager) getRoomDescription() {
 
 }
 
-func (this *RedisDataManager) setRoomVerify() {
+func (rdm *RedisDataManager) setRoomVerify() {
 
 }
 
-func (this *RedisDataManager) getRoomVerify() {
+func (rdm *RedisDataManager) getRoomVerify() {
 
 }
 
-func (this *RedisDataManager) setRoomVerifyType() {
+func (rdm *RedisDataManager) setRoomVerifyType() {
 
 }
 
-func (this *RedisDataManager) getRoomVerifyType() {
+func (rdm *RedisDataManager) getRoomVerifyType() {
 
 }

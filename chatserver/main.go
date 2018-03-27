@@ -7,6 +7,11 @@ import (
 	"os/signal"
 	//. "github.com/nature19862001/Chat/common"
 	//"github.com/nature19862001/base/gtnet"
+	"github.com/nature19862001/Chat/chatserver/Config"
+	"github.com/nature19862001/Chat/chatserver/Data"
+	"github.com/nature19862001/Chat/chatserver/Entity"
+	"github.com/nature19862001/Chat/chatserver/Service"
+	"github.com/nature19862001/base/gtnet"
 )
 
 var gDataManager dataManager
@@ -29,19 +34,28 @@ func main() {
 
 	flag.Parse()
 
-	nettype = *pnet
-	serverAddr = *paddr
-	redisNet = *predisnet
-	redisAddr = *predisaddr
+	if pnet != nil {
+		config.ServerNet = *pnet
+	}
+	if paddr != nil {
+		config.ServerAddr = *paddr
+	}
+	if predisnet != nil {
+		config.RedisAddr = *predisnet
+	}
+	// nettype = *pnet
+	// serverAddr = *paddr
+	// redisNet = *predisnet
+	// redisAddr = *predisaddr
 
-	gDataManager = new(redisDataManager)
-	gDataManager.initialize()
+	cdata.Manager().Initialize()
+	centity.Manager().Initialize()
 
 	//register server
-	ok := gDataManager.registerServer(serverAddr)
+	err := cdata.Manager().RegisterServer(config.ServerAddr)
 
-	if !ok {
-		fmt.Println("can't register server to datamanager")
+	if err == nil {
+		fmt.Println("register server to datamanager err:", err)
 		return
 	}
 
@@ -55,7 +69,7 @@ func main() {
 	// 	fmt.Println("chat server init failed!!!")
 	// 	return
 	// }
-	service := NewService("chatserver", nettype, serverAddr)
+	service := gtservice.NewService("chatserver", config.ServerNet, config.ServerAddr, onNewConn)
 	err := service.Start()
 	if err != nil {
 		fmt.Println(err)
@@ -75,5 +89,9 @@ func main() {
 	<-quit
 
 	//chatServerStop()
-	cleanOnlineUsers()
+	centity.Manager().CleanOnlineUsers()
+}
+
+func onNewConn(conn gtnet.IConn) {
+	centity.Manager().CreateNullEntity(conn)
 }

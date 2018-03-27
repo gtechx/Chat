@@ -1,9 +1,8 @@
-package service
+package gtservice
 
 import (
 	"time"
 
-	"github.com/nature19862001/Chat/chatserver/Entity"
 	"github.com/nature19862001/base/gtnet"
 )
 
@@ -13,17 +12,18 @@ type Service struct {
 	addr      string
 	startTime int64
 
-	server *gtnet.Server
+	connHandler func(IConn)
+	server      *gtnet.Server
 }
 
-func NewService(name string, net string, addr string) *Service {
-	return &Service{name: name, net: net, addr: addr}
+func NewService(name string, net string, addr string, connhandler func(IConn)) *Service {
+	return &Service{name: name, net: net, addr: addr, connHandler: connhandler}
 }
 
 func (this *Service) Start() error {
 	var err error
 
-	server := gtnet.NewServer(this.net, this.addr, onNewConn)
+	server := gtnet.NewServer(this.net, this.addr, this.connHandler)
 
 	err = server.Start()
 	if err == nil {
@@ -52,8 +52,4 @@ func (this *Service) Addr() string {
 
 func (this *Service) StartTime() int64 {
 	return this.startTime
-}
-
-func (this *Service) onNewConn(conn gtnet.IConn) {
-	entity.Manager().CreateNullEntity(conn)
 }
