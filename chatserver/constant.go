@@ -1,7 +1,7 @@
 package main
 
 const (
-	ERR_NONE = iota
+	ERR_NONE uint16 = iota
 	//common error
 	ERR_NAME_NOT_VALID
 	ERR_NAME_MAX_LEN
@@ -11,8 +11,9 @@ const (
 	ERR_REDIS = iota + 1000
 
 	//user error
-	ERR_USER = iota + 1100
-	ERR_USER_NOT_EXIST
+	ERR_ACCOUNT = iota + 1100
+	ERR_ACCOUNT_EXISTS
+	ERR_ACCOUNT_NOT_EXISTS
 	ERR_PASSWORD_INVALID
 
 	//privilege

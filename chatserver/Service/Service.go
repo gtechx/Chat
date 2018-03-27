@@ -12,11 +12,11 @@ type Service struct {
 	addr      string
 	startTime int64
 
-	connHandler func(IConn)
+	connHandler func(gtnet.IConn)
 	server      *gtnet.Server
 }
 
-func NewService(name string, net string, addr string, connhandler func(IConn)) *Service {
+func NewService(name string, net string, addr string, connhandler func(gtnet.IConn)) *Service {
 	return &Service{name: name, net: net, addr: addr, connHandler: connhandler}
 }
 
@@ -47,7 +47,7 @@ func (this *Service) Net() string {
 }
 
 func (this *Service) Addr() string {
-	return this.Addr
+	return this.addr
 }
 
 func (this *Service) StartTime() int64 {

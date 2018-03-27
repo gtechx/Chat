@@ -2,8 +2,6 @@ package main
 
 import (
 	"time"
-
-	"github.com/nature19862001/Chat/chatserver/Data"
 )
 
 func serverMonitorInit() {
@@ -15,6 +13,6 @@ func startServerMonitor() {
 
 	select {
 	case <-timer.C:
-		cdata.Manager().CheckServerTTL()
+		DataManager().CheckServerTTL()
 	}
 }

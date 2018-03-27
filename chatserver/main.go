@@ -8,13 +8,10 @@ import (
 	//. "github.com/nature19862001/Chat/common"
 	//"github.com/nature19862001/base/gtnet"
 	"github.com/nature19862001/Chat/chatserver/Config"
-	"github.com/nature19862001/Chat/chatserver/Data"
-	"github.com/nature19862001/Chat/chatserver/Entity"
 	"github.com/nature19862001/Chat/chatserver/Service"
 	"github.com/nature19862001/base/gtnet"
 )
 
-var gDataManager dataManager
 var quit chan os.Signal
 
 var nettype string = "tcp"
@@ -27,34 +24,40 @@ func main() {
 	quit = make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, os.Kill)
 
-	pnet := flag.String("net", nettype, "-net=")
-	paddr := flag.String("addr", serverAddr, "-addr=")
-	predisnet := flag.String("redisnet", redisNet, "-redisnet=")
-	predisaddr := flag.String("redisaddr", redisAddr, "-redisaddr=")
+	pnet := flag.String("net", "", "-net=")
+	paddr := flag.String("addr", "", "-addr=")
+	//predisnet := flag.String("redisnet", redisNet, "-redisnet=")
+	predisaddr := flag.String("redisaddr", "", "-redisaddr=")
 
 	flag.Parse()
 
-	if pnet != nil {
+	if pnet != nil && *pnet != "" {
 		config.ServerNet = *pnet
 	}
-	if paddr != nil {
+	if paddr != nil && *paddr != "" {
 		config.ServerAddr = *paddr
 	}
-	if predisnet != nil {
-		config.RedisAddr = *predisnet
+	if predisaddr != nil && *predisaddr != "" {
+		config.RedisAddr = *predisaddr
 	}
 	// nettype = *pnet
 	// serverAddr = *paddr
 	// redisNet = *predisnet
 	// redisAddr = *predisaddr
 
-	cdata.Manager().Initialize()
-	centity.Manager().Initialize()
+	err := DataManager().Initialize()
+
+	if err != nil {
+		fmt.Println("register server to datamanager err:", err)
+		return
+	}
+
+	EntityManager().Initialize()
 
 	//register server
-	err := cdata.Manager().RegisterServer(config.ServerAddr)
+	err = DataManager().RegisterServer(config.ServerAddr)
 
-	if err == nil {
+	if err != nil {
 		fmt.Println("register server to datamanager err:", err)
 		return
 	}
@@ -70,7 +73,7 @@ func main() {
 	// 	return
 	// }
 	service := gtservice.NewService("chatserver", config.ServerNet, config.ServerAddr, onNewConn)
-	err := service.Start()
+	err = service.Start()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -89,9 +92,9 @@ func main() {
 	<-quit
 
 	//chatServerStop()
-	centity.Manager().CleanOnlineUsers()
+	EntityManager().CleanOnlineUsers()
 }
 
 func onNewConn(conn gtnet.IConn) {
-	centity.Manager().CreateNullEntity(conn)
+	EntityManager().CreateNullEntity(conn)
 }

@@ -1,10 +1,9 @@
 package main
 
-import (
-	"github.com/nature19862001/Chat/chatserver/Data"
-	. "github.com/nature19862001/base/common"
-	//"github.com/nature19862001/base/gtnet"
-)
+// import (
+// 	. "github.com/nature19862001/base/common"
+// 	//"github.com/nature19862001/base/gtnet"
+// )
 
 func messagePullInit() {
 	go startMessagePull()
@@ -12,12 +11,16 @@ func messagePullInit() {
 
 func startMessagePull() {
 	for {
-		data := cdata.Manager().PullOnlineMessage(serverAddr, 15)
+		data, err := DataManager().PullOnlineMessage(serverAddr, 15)
+
+		if err != nil {
+			continue
+		}
 
 		if data != nil {
 			//fmt.Println(data)
-			uid := Uint64(data[0:8])
-			sendMsgToUid(uid, data[8:])
+			// uid := Uint64(data[0:8])
+			// sendMsgToUid(uid, data[8:])
 		}
 	}
 }

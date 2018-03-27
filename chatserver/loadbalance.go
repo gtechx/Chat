@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nature19862001/Chat/chatserver/Data"
 	. "github.com/nature19862001/base/common"
 )
 
@@ -23,7 +22,7 @@ func startHTTPServer() {
 }
 
 func getServerList(rw http.ResponseWriter, req *http.Request) {
-	serverlist := cdata.Manager().GetServerList()
+	serverlist, _ := DataManager().GetServerList()
 
 	ret := "{\r\n\tserverlist:\r\n\t[\r\n"
 	for i := 0; i < len(serverlist); i++ {
@@ -44,7 +43,7 @@ func starUserRegister() {
 
 type Error struct {
 	ErrorMsg  string `json:"error"`
-	ErrorCode int    `json:"errorcode"`
+	ErrorCode uint16 `json:"errorcode"`
 }
 
 func tokenVerify(rw http.ResponseWriter, req *http.Request) {
@@ -59,13 +58,13 @@ func tokenVerify(rw http.ResponseWriter, req *http.Request) {
 		errmsg.ErrorCode = ERR_TIME_OUT
 		errmsg.ErrorMsg = "ERR_TIME_OUT"
 	} else {
-		flag, err := cdata.Manager().IsUIDExists(uid)
+		flag, err := DataManager().IsUIDExists(uid)
 		if err != nil {
 			errmsg.ErrorCode = ERR_REDIS
 			errmsg.ErrorMsg = "ERR_REDIS"
 		} else if !flag {
-			errmsg.ErrorCode = ERR_USER_NOT_EXIST
-			errmsg.ErrorMsg = "ERR_USER_NOT_EXIST"
+			errmsg.ErrorCode = ERR_ACCOUNT_NOT_EXISTS
+			errmsg.ErrorMsg = "ERR_ACCOUNT_NOT_EXISTS"
 		}
 	}
 
@@ -136,8 +135,7 @@ func register(rw http.ResponseWriter, req *http.Request) {
 }
 
 func create(rw http.ResponseWriter, req *http.Request) {
-	var ok bool
-	var uid uint64
+	var err error
 	account := req.PostFormValue("account")
 	password := req.PostFormValue("password")
 	regip := req.RemoteAddr
@@ -153,7 +151,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		// ret += "}"
 		ret += "<span>请使用post方法!</span><br/>"
 		//io.WriteString(rw, ret)
-		goto err
+		goto errend
 	}
 
 	if account == "" {
@@ -162,7 +160,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		// ret += "}"
 		ret += "<span>请输入昵称!</span><br/>"
 		//io.WriteString(rw, ret)
-		goto err
+		goto errend
 	}
 
 	if password == "" {
@@ -171,18 +169,18 @@ func create(rw http.ResponseWriter, req *http.Request) {
 		// ret += "}"
 		ret += "<span>请输入密码!</span><br/>"
 		//io.WriteString(rw, ret)
-		goto err
+		goto errend
 	}
 
-	ok, uid = cdata.Manager().CreateAccount(account, password, regip)
+	err = DataManager().CreateAccount(account, password, regip)
 
-	if !ok {
+	if err != nil {
 		// ret := "{\r\n\terrorcode:3,\r\n"
 		// ret = "\r\n\terror:\"server error\",\r\n"
 		// ret += "}"
 		ret += "<span>注册失败，服务器内部错误!</span><br/>"
 		//io.WriteString(rw, ret)
-		goto err
+		goto errend
 	}
 
 	// ret := "{\r\n\terrorcode:0,\r\n"
@@ -191,7 +189,7 @@ func create(rw http.ResponseWriter, req *http.Request) {
 	// ret += "}"
 	ret += "<span>注册成功，登录账号：" + account + "</span><br/>"
 	goto end
-err:
+errend:
 	ret += "<form method=\"post\" action=\"/create\">"
 	ret += "账号：<input type=\"text\" name=\"account\" />"
 	ret += "<br/>"
